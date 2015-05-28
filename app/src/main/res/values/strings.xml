@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Thermostat</string>
+
+    <string name="title_section1">Settings</string>
+    <string name="title_section2">Temperature</string>
+    <string name="title_section3">Schedule</string>
+</resources>
