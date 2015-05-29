@@ -72,7 +72,8 @@
         android:textColor="#404040"
         android:enabled="true"
         android:focusable="true"
-        android:shadowColor="#202020" />
+        android:shadowColor="#202020"
+        android:clickable="true" />
 
     <TextView
         android:layout_width="wrap_content"

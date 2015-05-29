@@ -2,6 +2,8 @@ package denastya.thermostat;
 
 import java.util.Locale;
 
+import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -10,17 +12,78 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
+import android.widget.PopupWindow;
 
-import denastya.thermostat.ui.SettingsTab;
+import denastya.thermostat.core.Mode;
+import denastya.thermostat.core.ModeManager;
+import denastya.thermostat.core.ModeSettings;
+import denastya.thermostat.core.Static;
+import denastya.thermostat.ui.UiAdjust;
 
 
 public class HostActivity extends ActionBarActivity implements ActionBar.TabListener {
+
+
+    private ModeManager manager = new ModeManager();
+
+
+
+
+    public void adjustMode(View v) {
+        //Log.d("RRR", "" + getStatusBarHeight());
+        if (v.getTag().equals("dayTemp")) {
+            Static.mode = "Day";
+            adjustMode(manager.getSettings(ModeSettings.Period.DAY));
+        }
+        else if (v.getTag().equals("nightTemp")) {
+            Static.mode = "Night";
+            adjustMode(manager.getSettings(ModeSettings.Period.NIGHT));
+        }
+    }
+
+    public void adjustMode(ModeSettings mode) {
+
+        Static.adjustingMode = mode;
+
+        Point size = new Point();
+        getWindowManager().getDefaultDisplay().getSize(size);
+        LinearLayout ll = new LinearLayout(this);
+        LayoutInflater layoutInflater = (LayoutInflater)getBaseContext()
+                .getSystemService(LAYOUT_INFLATER_SERVICE);
+        View v = layoutInflater.inflate(R.layout._1settings2, ll);
+        v.measure(
+                View.MeasureSpec.makeMeasureSpec((int)(size.x * 0.9), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec((int)(size.y * 0.7), View.MeasureSpec.AT_MOST)
+        );
+        PopupWindow w = new PopupWindow(v.getMeasuredWidth(), v.getMeasuredHeight());
+        UiAdjust.adjustSettingsPopup(v);
+
+        w.setContentView(v);
+        w.setBackgroundDrawable(new BitmapDrawable());
+        w.setOutsideTouchable(true);
+        w.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
+
+        Log.d("RRR", " " + mode.toString());
+
+    }
+
+    public int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -106,6 +169,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
     }
 
+
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
      * one of the sections/tabs/pages.
@@ -177,8 +241,8 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
             int num = (int)(getArguments().get(ARG_SECTION_NUMBER));
             switch (num) {
                 case 1:
-                    rootView = inflater.inflate(R.layout._1settings2, container, false);
-                    new SettingsTab().doMyDeeds(rootView);
+                    rootView = inflater.inflate(R.layout._1settings, container, false);
+                    UiAdjust.adjustSettingsScreen(rootView);
                     break;
                 case 2:
                     rootView = inflater.inflate(R.layout._2temperature, container, false);

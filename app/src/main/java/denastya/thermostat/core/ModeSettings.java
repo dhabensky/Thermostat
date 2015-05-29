@@ -22,6 +22,18 @@ public class ModeSettings {
         return temperature;
     }
 
+    public int getTemperatureInt() {
+        return (int)temperature;
+    }
+
+    public int getTemperatureFrac() {
+        return Math.round((temperature - (int)temperature) * 10);
+    }
+
+    public String getTemperatureString() {
+        return String.format("%.1f", temperature).replace(",", ".");
+    }
+
     public boolean isDay() {
         return this.period == Period.DAY;
     }
