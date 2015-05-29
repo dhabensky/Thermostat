@@ -34,19 +34,27 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
 
     private ModeManager manager = new ModeManager();
+    private PopupWindow popup;
 
 
 
+
+    public void saveSettings(View v) {
+        float temp = ((NumberPicker)popup.getContentView().findViewById(R.id.integralPicker)).getValue() +
+                ((NumberPicker)popup.getContentView().findViewById(R.id.fractionalPicker)).getValue() / 10.0f;
+        Static.adjustingMode.setTemperature(temp);
+        popup.dismiss();
+    }
 
     public void adjustMode(View v) {
         //Log.d("RRR", "" + getStatusBarHeight());
         if (v.getTag().equals("dayTemp")) {
             Static.mode = "Day";
-            adjustMode(manager.getSettings(ModeSettings.Period.DAY));
+            adjustMode(ModeManager.getSettings(ModeSettings.Period.DAY));
         }
         else if (v.getTag().equals("nightTemp")) {
             Static.mode = "Night";
-            adjustMode(manager.getSettings(ModeSettings.Period.NIGHT));
+            adjustMode(ModeManager.getSettings(ModeSettings.Period.NIGHT));
         }
     }
 
@@ -64,13 +72,13 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                 View.MeasureSpec.makeMeasureSpec((int)(size.x * 0.9), View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec((int)(size.y * 0.7), View.MeasureSpec.AT_MOST)
         );
-        PopupWindow w = new PopupWindow(v.getMeasuredWidth(), v.getMeasuredHeight());
+        popup = new PopupWindow(v.getMeasuredWidth(), v.getMeasuredHeight());
         UiAdjust.adjustSettingsPopup(v);
 
-        w.setContentView(v);
-        w.setBackgroundDrawable(new BitmapDrawable());
-        w.setOutsideTouchable(true);
-        w.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
+        popup.setContentView(v);
+        popup.setBackgroundDrawable(new BitmapDrawable());
+        popup.setOutsideTouchable(true);
+        popup.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
 
         Log.d("RRR", " " + mode.toString());
 

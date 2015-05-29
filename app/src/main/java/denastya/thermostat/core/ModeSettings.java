@@ -1,5 +1,7 @@
 package denastya.thermostat.core;
 
+import denastya.thermostat.ui.UiAdjust;
+
 /**
  * Created by admin on 21.05.2015.
  */

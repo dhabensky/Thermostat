@@ -100,6 +100,7 @@
         android:layout_alignLeft="@+id/modeName"
         android:layout_alignStart="@+id/modeName"
         android:background="#ffe0e0e0"
-        android:clickable="true" />
+        android:clickable="true"
+        android:onClick="saveSettings" />
 
 </RelativeLayout>
