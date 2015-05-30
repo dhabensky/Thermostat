@@ -1,8 +1,7 @@
 package denastya.thermostat;
 
-import java.util.Locale;
-
 import android.graphics.Point;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
@@ -12,10 +11,8 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,65 +20,97 @@ import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.PopupWindow;
 
-import denastya.thermostat.core.Mode;
-import denastya.thermostat.core.ModeManager;
 import denastya.thermostat.core.ModeSettings;
-import denastya.thermostat.core.Static;
+import denastya.thermostat.core.Model;
 import denastya.thermostat.ui.UiAdjust;
 
 
 public class HostActivity extends ActionBarActivity implements ActionBar.TabListener {
 
 
-    private ModeManager manager = new ModeManager();
     private PopupWindow popup;
 
 
+
+    public void swipeToSettingsCurrent(View v) {
+        Model.setEditMode(Model.getCurrentMode());
+        mViewPager.setCurrentItem(0);
+    }
+
+    public void swipeToSettingsNext(View v) {
+        Model.setEditMode(Model.getNextUsage().getSettings());
+        mViewPager.setCurrentItem(0);
+    }
+
+    public void swipeToSchedule(View v) {
+        mViewPager.setCurrentItem(2);
+    }
 
 
     public void saveSettings(View v) {
         float temp = ((NumberPicker)popup.getContentView().findViewById(R.id.integralPicker)).getValue() +
                 ((NumberPicker)popup.getContentView().findViewById(R.id.fractionalPicker)).getValue() / 10.0f;
-        Static.adjustingMode.setTemperature(temp);
+        Model.getAdjusting().setTemperature(temp);
         popup.dismiss();
+        new Thread(new Runnable() {
+
+            long start = System.currentTimeMillis();
+            @Override
+            public void run() {
+                while (System.currentTimeMillis() < start + 300) {
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (Model.getEditMode() != null) {
+                    Model.setEditMode(null);
+                    mViewPager.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mViewPager.getCurrentItem() == 0)
+                                mViewPager.setCurrentItem(1);
+                        }
+                    });
+                }
+            }
+        }).start();
+
+        //mViewPager.setCurrentItem(1);
     }
 
     public void adjustMode(View v) {
-        //Log.d("RRR", "" + getStatusBarHeight());
+
         if (v.getTag().equals("dayTemp")) {
-            Static.mode = "Day";
-            adjustMode(ModeManager.getSettings(ModeSettings.Period.DAY));
+            adjustMode(ModeSettings.Period.DAY);
         }
         else if (v.getTag().equals("nightTemp")) {
-            Static.mode = "Night";
-            adjustMode(ModeManager.getSettings(ModeSettings.Period.NIGHT));
+            adjustMode(ModeSettings.Period.NIGHT);
         }
     }
 
-    public void adjustMode(ModeSettings mode) {
+    public void adjustMode(ModeSettings.Period period) {
 
-        Static.adjustingMode = mode;
+        Model.setAdjusting(period);
 
         Point size = new Point();
         getWindowManager().getDefaultDisplay().getSize(size);
         LinearLayout ll = new LinearLayout(this);
         LayoutInflater layoutInflater = (LayoutInflater)getBaseContext()
                 .getSystemService(LAYOUT_INFLATER_SERVICE);
-        View v = layoutInflater.inflate(R.layout._1settings2, ll);
+        View v = layoutInflater.inflate(R.layout._4popup, ll);
         v.measure(
                 View.MeasureSpec.makeMeasureSpec((int)(size.x * 0.9), View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec((int)(size.y * 0.7), View.MeasureSpec.AT_MOST)
         );
         popup = new PopupWindow(v.getMeasuredWidth(), v.getMeasuredHeight());
-        UiAdjust.adjustSettingsPopup(v);
+        UiAdjust.onPopupCreate(v);
 
         popup.setContentView(v);
         popup.setBackgroundDrawable(new BitmapDrawable());
         popup.setOutsideTouchable(true);
         popup.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
-
-        Log.d("RRR", " " + mode.toString());
-
     }
 
     public int getStatusBarHeight() {
@@ -134,6 +163,13 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
             public void onPageSelected(int position) {
                 actionBar.setSelectedNavigationItem(position);
             }
+
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
+                if (position == 0 && positionOffsetPixels == 0 && Model.getEditMode() != null)
+                    adjustMode(Model.getEditMode().getPeriod());
+            }
         });
 
         // For each of the sections in the app, add a tab to the action bar.
@@ -148,6 +184,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                             .setTabListener(this));
         }
         mViewPager.setCurrentItem(1);
+        //UiAdjust.onScreenCreate(UiAdjust.TEMPERATURE, mViewPager.getChildAt(2));
     }
 
     @Override
@@ -250,7 +287,6 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
             switch (num) {
                 case 1:
                     rootView = inflater.inflate(R.layout._1settings, container, false);
-                    UiAdjust.adjustSettingsScreen(rootView);
                     break;
                 case 2:
                     rootView = inflater.inflate(R.layout._2temperature, container, false);
@@ -259,6 +295,8 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                     rootView = inflater.inflate(R.layout._3schedule, container, false);
                     break;
             }
+
+            UiAdjust.onScreenCreate(num, rootView);
 
             return rootView;
         }

@@ -5,19 +5,49 @@ import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import denastya.thermostat.R;
-import denastya.thermostat.core.ModeManager;
 import denastya.thermostat.core.ModeSettings;
-import denastya.thermostat.core.Static;
+import denastya.thermostat.core.Model;
+import denastya.thermostat.core.Watchers.SettingsPeriodWatcher;
+import denastya.thermostat.ui.Watchers.PeriodWatcher;
+import denastya.thermostat.ui.Watchers.TempWatcher;
+import denastya.thermostat.ui.Watchers.TimeWatcher;
 
 /**
  * Created by admin on 29.05.2015.
  */
 public class UiAdjust {
 
-    public static void adjustSettingsPopup(View view) {
+    public static final int SETTINGS = 1;
+    public static final int TEMPERATURE = 2;
+    public static final int SCHEDULE = 3;
+    public static final int POPUP = 4;
+
+    public static void onSettingsScreenCreate(View view) {
+
+        final TextView dayTemp = (TextView)view.findViewById((R.id.dayTemp));
+        final TextView nightTemp = (TextView)view.findViewById((R.id.nightTemp));
+
+        Model.getSettings(ModeSettings.Period.DAY).attachWatcher(new TempWatcher(dayTemp));
+        Model.getSettings(ModeSettings.Period.NIGHT).attachWatcher(new TempWatcher(nightTemp));
+    }
+
+    public static void onTemperatureScreenCreate(View view) {
+
+        TextView curTemp = (TextView)view.findViewById((R.id.curTemp));
+        TextView modeTemp = (TextView)view.findViewById((R.id.modeTemp));
+        TextView modeSwitch = (TextView)view.findViewById((R.id.modeSwitchTime));
+        TextView nextModeTemp = (TextView)view.findViewById((R.id.nextModeTemp));
+
+        Model.getCurrentTemp().attachWatcher(new TempWatcher(curTemp));
+        Model.getCurrentUsage().attachWatcher(new TempWatcher(modeTemp));
+        Model.getCurrentUsage().attachWatcher(new TimeWatcher(modeSwitch));
+        Model.getNextUsage().attachWatcher(new TempWatcher(nextModeTemp));
+    }
+
+    public static void onPopupCreate(View view) {
 
         TextView t = (TextView)view.findViewById((R.id.modeName));
-        t.setText(Static.mode + " mode");
+        t.setText(Model.getAdjustingString());
 
         int min = 10;
         int max = 30;
@@ -31,21 +61,15 @@ public class UiAdjust {
         numpick.setMinValue(min);
         numpick.setMaxValue(max);
         numpick.setWrapSelectorWheel(false);
-        numpick.setValue(Static.adjustingMode.getTemperatureInt());
+        numpick.setValue(Model.getAdjusting().getTemperatureInt());
 
         final NumberPicker intpick = numpick;
 
         numpick = (NumberPicker)view.findViewById(R.id.fractionalPicker);
         numpick.setMinValue(0);
         numpick.setMaxValue(9);
-        numpick.setValue(Static.adjustingMode.getTemperatureFrac());
+        numpick.setValue(Model.getAdjusting().getTemperatureFrac());
         numpick.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-
-            long millis = System.currentTimeMillis();
-            boolean jumpUp = false;
-            boolean jumpDown = false;
-            int initial;
-            boolean fromTop;
 
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
@@ -71,16 +95,20 @@ public class UiAdjust {
         });
     }
 
-
-    public static void adjustSettingsScreen(View view) {
-
-
-        TextView t = (TextView)view.findViewById((R.id.dayTemp));
-        t.setText(ModeManager.getSettings(ModeSettings.Period.DAY).getTemperatureString());
-
-        t = (TextView)view.findViewById((R.id.nightTemp));
-        t.setText(ModeManager.getSettings(ModeSettings.Period.NIGHT).getTemperatureString());
-
+    public static void onScreenCreate(int index, View view) {
+        switch (index) {
+            case SETTINGS:
+                onSettingsScreenCreate(view);
+                break;
+            case 2:
+                onTemperatureScreenCreate(view);
+                break;
+            case 3:
+                break;
+            case POPUP:
+                onPopupCreate(view);
+                break;
+        }
     }
 
 }
