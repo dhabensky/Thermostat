@@ -1,12 +1,17 @@
 package denastya.thermostat.ui;
 
+import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.NumberPicker;
+import android.widget.Spinner;
 import android.widget.TextView;
 
+import denastya.thermostat.HostActivity;
 import denastya.thermostat.R;
 import denastya.thermostat.core.ModeSettings;
 import denastya.thermostat.core.ModeUsage;
@@ -155,6 +160,46 @@ public class UiAdjust {
         });
     }
 
+    public static void onScheduleScreenCreated(View view) {
+
+
+        class DropDownListener implements AdapterView.OnItemSelectedListener {
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        }
+
+
+        String[] days = {
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+        };
+
+        Spinner spinner = (Spinner)view.findViewById(R.id.spinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                Model.activity, R.array.days_array, R.layout.spinner_layout);
+
+
+
+        adapter.setDropDownViewResource(R.layout.spinner_layout);
+        spinner.setAdapter(adapter);
+        //spinner.setOnItemSelectedListener(new DropDownListener());
+
+        //adapter.notifyDataSetChanged();
+    }
+
     public static void onScreenCreate(int index, View view) {
         switch (index) {
             case SETTINGS:
@@ -164,6 +209,7 @@ public class UiAdjust {
                 onTemperatureScreenCreate(view);
                 break;
             case 3:
+                onScheduleScreenCreated(view);
                 break;
             case POPUP:
                 onPopupCreate(view);

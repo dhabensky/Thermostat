@@ -1,5 +1,7 @@
 package denastya.thermostat.core;
 
+import android.app.Activity;
+
 import java.sql.Array;
 import java.util.ArrayList;
 
@@ -26,6 +28,8 @@ public class Model {
     private static boolean switchBlocked;
 
     private static ArrayList<BooleanWatcher> watchers;
+
+    public static Activity activity;
 
 
     static  {

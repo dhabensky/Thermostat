@@ -164,7 +164,7 @@
     <CheckBox
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Block next switch"
+        android:text="Block mode switch"
         android:id="@+id/checkBox"
         android:textSize="28dp"
         android:textColor="#404040"
