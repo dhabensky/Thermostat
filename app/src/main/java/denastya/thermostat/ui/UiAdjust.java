@@ -1,13 +1,18 @@
 package denastya.thermostat.ui;
 
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import denastya.thermostat.R;
 import denastya.thermostat.core.ModeSettings;
+import denastya.thermostat.core.ModeUsage;
 import denastya.thermostat.core.Model;
 import denastya.thermostat.core.Watchers.SettingsPeriodWatcher;
+import denastya.thermostat.ui.Watchers.OverridenWatcher;
 import denastya.thermostat.ui.Watchers.PeriodWatcher;
 import denastya.thermostat.ui.Watchers.TempWatcher;
 import denastya.thermostat.ui.Watchers.TimeWatcher;
@@ -42,6 +47,61 @@ public class UiAdjust {
         Model.getCurrentUsage().attachWatcher(new TempWatcher(modeTemp));
         Model.getCurrentUsage().attachWatcher(new TimeWatcher(modeSwitch));
         Model.getNextUsage().attachWatcher(new TempWatcher(nextModeTemp));
+
+        Model.attachOverridenWatcher(new OverridenWatcher((ViewGroup)view));
+        adjustTemperatureScreenItems(view);
+    }
+
+    public static void adjustTemperatureScreenItems(View view) {
+
+        CheckBox chb = (CheckBox)view.findViewById(R.id.checkBox);
+        chb.setChecked(Model.isSwitchBlocked());
+
+        Button overrideBtn = ((Button)view.findViewById(R.id.overrideBtn));
+        overrideBtn.setText(Model.isOverriden() ? "Cancel" : "Override...");
+
+        TextView tv1 = (TextView)view.findViewById(R.id.nextSwitchLabel);
+        TextView tv2 = (TextView)view.findViewById(R.id.nextModeTemp);
+        TextView tv3 = (TextView)view.findViewById(R.id.modeSwitchTime);
+        TextView tv4 = (TextView)view.findViewById(R.id.textView22);
+
+        if (Model.isOverriden()) {
+            // fix here !!
+            ModeUsage mode = new ModeUsage();
+            mode.setSettings(Model.getSettings(ModeSettings.Period.TEMP_OVERRIDE));
+            Model.setCurrentUsage(mode);
+
+            overrideBtn.setText("Cancel");
+            chb.setVisibility(View.VISIBLE);
+            chb.setChecked(Model.isSwitchBlocked());
+            if (chb.isChecked()) {
+                tv1.setVisibility(View.INVISIBLE);
+                tv2.setVisibility(View.INVISIBLE);
+                tv3.setVisibility(View.INVISIBLE);
+                tv4.setVisibility(View.INVISIBLE);
+            }
+            else {
+                tv1.setVisibility(View.VISIBLE);
+                tv2.setVisibility(View.VISIBLE);
+                tv3.setVisibility(View.VISIBLE);
+                tv4.setVisibility(View.VISIBLE);
+            }
+        }
+        else {
+            // fix here !!
+            ModeUsage mode = new ModeUsage();
+            mode.setSettings(Model.getSettings(ModeSettings.Period.DAY));
+            Model.setCurrentUsage(mode);
+
+            overrideBtn.setText("Override...");
+            chb.setVisibility(View.INVISIBLE);
+            tv1.setVisibility(View.VISIBLE);
+            tv2.setVisibility(View.VISIBLE);
+            tv3.setVisibility(View.VISIBLE);
+            tv4.setVisibility(View.VISIBLE);
+        }
+
+
     }
 
     public static void onPopupCreate(View view) {

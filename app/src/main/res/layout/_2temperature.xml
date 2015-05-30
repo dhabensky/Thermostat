@@ -18,7 +18,7 @@
         android:textSize="128dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:paddingTop="72dp"
+        android:paddingTop="50dp"
         android:textColor="#404040" />
 
     <TextView
@@ -37,21 +37,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Mode settings:"
+        android:text="Current settings:"
         android:id="@+id/textView3"
         android:textSize="28dp"
         android:textColor="#404040"
         android:paddingLeft="32dp"
-        android:layout_alignTop="@+id/textView2"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_above="@+id/textView2"
+        android:layout_toRightOf="@+id/section_label"
+        android:layout_toEndOf="@+id/section_label" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:text="Next switch:"
-        android:id="@+id/textView4"
+        android:id="@+id/nextSwitchLabel"
         android:textSize="28dp"
         android:textColor="#404040"
         android:paddingLeft="32dp"
@@ -65,15 +65,21 @@
         android:layout_height="wrap_content"
         android:text="Override..."
         android:id="@+id/overrideBtn"
-        android:layout_marginBottom="59dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="35dp"
         android:textSize="32dp"
         android:textColor="#404040"
         android:enabled="true"
         android:focusable="true"
         android:shadowColor="#202020"
-        android:clickable="true" />
+        android:clickable="true"
+        android:visibility="visible"
+        android:layout_alignParentBottom="true"
+        android:onClick="toggleOverride"
+        android:layout_toRightOf="@+id/section_label"
+        android:layout_alignRight="@+id/checkBox"
+        android:layout_alignEnd="@+id/checkBox"
+        android:layout_marginLeft="40dp"
+        android:layout_marginRight="40dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -82,12 +88,12 @@
         android:text="22.1"
         android:id="@+id/modeTemp"
         android:textSize="28dp"
-        android:textColor="#ff517181"
+        android:textColor="@color/clickable"
         android:layout_alignTop="@+id/textView3"
         android:layout_toLeftOf="@+id/textView21"
         android:layout_toStartOf="@+id/textView21"
-        android:onClick="swipeToSettingsCurrent"
-        android:clickable="true" />
+        android:clickable="true"
+        android:onClick="swipeToSettingsCurrent" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -96,8 +102,8 @@
         android:text="25.4"
         android:id="@+id/nextModeTemp"
         android:textSize="28dp"
-        android:textColor="#ff517181"
-        android:layout_below="@+id/textView4"
+        android:textColor="@color/clickable"
+        android:layout_below="@+id/nextSwitchLabel"
         android:layout_alignRight="@+id/modeSwitchTime"
         android:layout_alignEnd="@+id/modeSwitchTime"
         android:clickable="true"
@@ -110,8 +116,8 @@
         android:text="10 pm"
         android:id="@+id/modeSwitchTime"
         android:textSize="28dp"
-        android:textColor="#ff517181"
-        android:layout_alignBottom="@+id/textView4"
+        android:textColor="@color/clickable"
+        android:layout_alignBottom="@+id/nextSwitchLabel"
         android:layout_alignRight="@+id/modeTemp"
         android:layout_alignEnd="@+id/modeTemp"
         android:onClick="swipeToSchedule"
@@ -154,5 +160,25 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:textColor="#ff517181" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Block next switch"
+        android:id="@+id/checkBox"
+        android:textSize="28dp"
+        android:textColor="#404040"
+        android:checked="false"
+        android:gravity="left|bottom|center_horizontal"
+        android:layout_below="@+id/nextModeTemp"
+        android:layout_marginTop="16dp"
+        android:layout_alignRight="@+id/textView20"
+        android:layout_alignEnd="@+id/textView20"
+        android:layout_toRightOf="@+id/section_label"
+        android:layout_toEndOf="@+id/section_label"
+        android:layout_marginLeft="26dp"
+        android:enabled="true"
+        android:singleLine="true"
+        android:onClick="toggleBlock"/>
 
 </RelativeLayout>

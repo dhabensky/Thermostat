@@ -105,4 +105,10 @@ public class ModeUsage {
         this.tempWatchers.remove(w);
     }
 
+    public void copyFrom(ModeUsage other) {
+        setSettings(other.settings);
+        setStart(other.start);
+        setEnd(other.end);
+    }
+
 }

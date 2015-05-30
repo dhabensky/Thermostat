@@ -1,12 +1,18 @@
 package denastya.thermostat.core;
 
+import java.sql.Array;
+import java.util.ArrayList;
+
+import denastya.thermostat.core.Watchers.BooleanWatcher;
+import denastya.thermostat.ui.UiAdjust;
+import denastya.thermostat.ui.Watchers.OverridenWatcher;
+
 /**
  * Created by admin on 30.05.2015.
  */
 public class Model {
 
     private static ModeSettings currentTemp;
-    private static ModeSettings currentMode;
     private static ModeSettings settings[];
     private static ModeSettings adjustingMode;
 
@@ -14,31 +20,40 @@ public class Model {
     private static ModeUsage nextUsage;
 
     private static ModeSettings editMode;
+//    public static boolean needReturn;
+
+    private static boolean overriden;
+    private static boolean switchBlocked;
+
+    private static ArrayList<BooleanWatcher> watchers;
 
 
     static  {
-        int len = ModeSettings.Period.values().length;
-        settings = new ModeSettings[len];
-        int i = 0;
-        for (ModeSettings.Period p : ModeSettings.Period.values()) {
-            settings[i++] = new ModeSettings(p);
-        }
+
+        settings = new ModeSettings[3];
+        settings[0] = new ModeSettings(ModeSettings.Period.DAY);
+        settings[1] = new ModeSettings(ModeSettings.Period.NIGHT);
+        settings[2] = new ModeSettings(ModeSettings.Period.TEMP_OVERRIDE);
 
         settings[0].setTemperature(25.3f);
         settings[1].setTemperature(21.0f);
 
-        currentTemp = settings[4];
+        currentTemp = new ModeSettings(ModeSettings.Period.ACTUAL_TEMP);
         currentTemp.setTemperature(29.3f);
 
-        currentMode = settings[0];
-
         currentUsage = new ModeUsage();
-        currentUsage.setSettings(currentMode);
+        currentUsage.setSettings(settings[0]);
 
         nextUsage = new ModeUsage();
         nextUsage.setSettings(settings[1]);
 
         setEditMode(null);
+//        needReturn = false;
+
+        watchers = new ArrayList<>();
+
+        setOverriden(false);
+        setSwitchBlocked(false);
     }
 
     public static ModeSettings getSettings(ModeSettings.Period period) {
@@ -64,16 +79,16 @@ public class Model {
         return adjustingName;
     }
 
-    public static ModeSettings getCurrentMode() {
-        return currentMode;
-    }
-
     public static ModeSettings getCurrentTemp() {
         return currentTemp;
     }
 
     public static ModeUsage getCurrentUsage() {
         return currentUsage;
+    }
+
+    public static void setCurrentUsage(ModeUsage usage) {
+        currentUsage.copyFrom(usage);
     }
 
     public static ModeUsage getNextUsage() {
@@ -86,5 +101,29 @@ public class Model {
 
     public static void setEditMode(ModeSettings editMode) {
         Model.editMode = editMode;
+    }
+
+    public static boolean isOverriden() {
+        return overriden;
+    }
+
+    public static void setOverriden(boolean overriden) {
+        Model.overriden = overriden;
+
+        for (BooleanWatcher w : watchers)
+            w.onChange(overriden);
+    }
+
+    public static boolean isSwitchBlocked() {
+        return switchBlocked;
+    }
+
+    public static void setSwitchBlocked(boolean switchBlocked) {
+        Model.switchBlocked = switchBlocked;
+    }
+
+    public static void attachOverridenWatcher(BooleanWatcher watcher) {
+        watchers.add(watcher);
+        watcher.onChange(overriden);
     }
 }

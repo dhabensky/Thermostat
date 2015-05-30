@@ -16,9 +16,13 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import denastya.thermostat.core.ModeSettings;
 import denastya.thermostat.core.Model;
@@ -27,19 +31,48 @@ import denastya.thermostat.ui.UiAdjust;
 
 public class HostActivity extends ActionBarActivity implements ActionBar.TabListener {
 
-
     private PopupWindow popup;
 
 
+    public void toggleOverride(View v) {
+
+        if (!Model.isOverriden()) {
+            adjustMode(ModeSettings.Period.TEMP_OVERRIDE);
+        }
+        else {
+            Model.setOverriden(false);
+            ViewGroup root = (ViewGroup)getWindow().getDecorView().findViewById(android.R.id.content);
+            UiAdjust.adjustTemperatureScreenItems(root);
+        }
+    }
+
+    public void toggleBlock(View v) {
+        Model.setSwitchBlocked(!Model.isSwitchBlocked());
+
+        if (Model.isSwitchBlocked()) {
+            ViewGroup root = (ViewGroup)getWindow().getDecorView().findViewById(android.R.id.content);
+            ((TextView)root.findViewById(R.id.nextSwitchLabel)).setVisibility(View.INVISIBLE);
+            ((TextView)root.findViewById(R.id.nextModeTemp)).setVisibility(View.INVISIBLE);
+            ((TextView)root.findViewById(R.id.modeSwitchTime)).setVisibility(View.INVISIBLE);
+            ((TextView)root.findViewById(R.id.textView22)).setVisibility(View.INVISIBLE);
+        }
+        else {
+            ViewGroup root = (ViewGroup)getWindow().getDecorView().findViewById(android.R.id.content);
+            ((TextView)root.findViewById(R.id.nextSwitchLabel)).setVisibility(View.VISIBLE);
+            ((TextView)root.findViewById(R.id.nextModeTemp)).setVisibility(View.VISIBLE);
+            ((TextView)root.findViewById(R.id.modeSwitchTime)).setVisibility(View.VISIBLE);
+            ((TextView)root.findViewById(R.id.textView22)).setVisibility(View.VISIBLE);
+        }
+    }
 
     public void swipeToSettingsCurrent(View v) {
-        Model.setEditMode(Model.getCurrentMode());
-        mViewPager.setCurrentItem(0);
+        Model.setEditMode(Model.getCurrentUsage().getSettings());
+        adjustMode(Model.getEditMode().getPeriod());
     }
 
     public void swipeToSettingsNext(View v) {
         Model.setEditMode(Model.getNextUsage().getSettings());
-        mViewPager.setCurrentItem(0);
+        adjustMode(Model.getEditMode().getPeriod());
     }
 
     public void swipeToSchedule(View v) {
@@ -48,36 +81,20 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
 
     public void saveSettings(View v) {
-        float temp = ((NumberPicker)popup.getContentView().findViewById(R.id.integralPicker)).getValue() +
-                ((NumberPicker)popup.getContentView().findViewById(R.id.fractionalPicker)).getValue() / 10.0f;
-        Model.getAdjusting().setTemperature(temp);
-        popup.dismiss();
-        new Thread(new Runnable() {
+        synchronized (this) {
 
-            long start = System.currentTimeMillis();
-            @Override
-            public void run() {
-                while (System.currentTimeMillis() < start + 300) {
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (Model.getEditMode() != null) {
-                    Model.setEditMode(null);
-                    mViewPager.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (mViewPager.getCurrentItem() == 0)
-                                mViewPager.setCurrentItem(1);
-                        }
-                    });
-                }
+            float temp = ((NumberPicker) popup.getContentView().findViewById(R.id.integralPicker)).getValue() +
+                    ((NumberPicker) popup.getContentView().findViewById(R.id.fractionalPicker)).getValue() / 10.0f;
+
+            Model.getAdjusting().setTemperature(temp);
+
+            if (Model.getAdjusting().getPeriod() == ModeSettings.Period.TEMP_OVERRIDE) {
+                Model.setOverriden(true);
             }
-        }).start();
 
-        //mViewPager.setCurrentItem(1);
+            popup.dismiss();
+            popup = null;
+        }
     }
 
     public void adjustMode(View v) {
@@ -104,12 +121,49 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                 View.MeasureSpec.makeMeasureSpec((int)(size.x * 0.9), View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec((int)(size.y * 0.7), View.MeasureSpec.AT_MOST)
         );
+
         popup = new PopupWindow(v.getMeasuredWidth(), v.getMeasuredHeight());
         UiAdjust.onPopupCreate(v);
 
         popup.setContentView(v);
         popup.setBackgroundDrawable(new BitmapDrawable());
         popup.setOutsideTouchable(true);
+
+//            if (Model.needReturn) {
+//                popup.setOnDismissListener(new PopupWindow.OnDismissListener() {
+//                    @Override
+//                    public void onDismiss() {
+//                        new Thread(new Runnable() {
+//
+//                            long start = System.currentTimeMillis();
+//
+//                            @Override
+//                            public void run() {
+//
+//                                while (System.currentTimeMillis() < start + 300) {
+//                                    try {
+//                                        Thread.sleep(50);
+//                                    } catch (InterruptedException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//
+//                                mViewPager.post(new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//                                        if (mViewPager.getCurrentItem() == 0)
+//                                            mViewPager.setCurrentItem(1);
+//                                        popup = null;
+//                                        //Model.needReturn = false;
+//                                    }
+//                                });
+//                            }
+//                        }).start();
+//                    }
+//                });
+//            }
+
+            //popup.setAnimationStyle(R.style.PopupWindowAnimation); // kills my smartphone :((
         popup.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
     }
 
@@ -164,12 +218,24 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                 actionBar.setSelectedNavigationItem(position);
             }
 
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-                if (position == 0 && positionOffsetPixels == 0 && Model.getEditMode() != null)
-                    adjustMode(Model.getEditMode().getPeriod());
-            }
+//            @Override
+//            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+//                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
+//                if (position == 0 && positionOffsetPixels == 0 && Model.getEditMode() != null) {
+//                    adjustMode(Model.getEditMode().getPeriod());
+//                    Model.setEditMode(null);
+//                    Model.needReturn = true;
+//                }
+//                else {
+//                    synchronized (this) {
+//                        Model.needReturn = false;
+//                        if (popup != null) {
+//                            popup.dismiss();
+//                            popup = null;
+//                        }
+//                    }
+//                }
+//            }
         });
 
         // For each of the sections in the app, add a tab to the action bar.
