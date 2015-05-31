@@ -67,7 +67,6 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
             c.set(Calendar.SECOND, t.secs);
 
             ModeUsage current = new ModeUsage();
-            current.setStart(c);
             current.setStartTime(Model.timeEngine.getWeekTime());
             Model.schedule.switchMode(t.days, current);
 

@@ -13,8 +13,6 @@ import denastya.thermostat.ui.Watchers.TimeWatcher;
  */
 public class ModeUsage implements Comparable<ModeUsage> {
 
-    private Calendar start;
-    private Calendar end;
     public TimeEngine.WeekTime startTime;
     private ModeSettings settings;
 
@@ -27,9 +25,7 @@ public class ModeUsage implements Comparable<ModeUsage> {
     public ModeUsage() {
         this.watchers = new ArrayList<>();
         this.tempWatchers = new ArrayList<>();
-        this.start = Calendar.getInstance();
         this.startTime = new TimeEngine.WeekTime();
-        this.end = Calendar.getInstance();
 
         this.settingsTempWatcher = new SettingsTempWatcher() {
 
@@ -48,30 +44,11 @@ public class ModeUsage implements Comparable<ModeUsage> {
         return startTime;
     }
 
-    public void setStart(Calendar start) {
-        this.start = start;
-    }
-
     public void setStartTime(TimeEngine.WeekTime start) {
         this.startTime = start;
 
         for (UsageTimeWatcher w : watchers)
             w.onChange(this);
-    }
-
-    public Calendar getEnd() {
-        return end;
-    }
-
-    public String getEndString() {
-        String res = end.get(Calendar.HOUR) + ":";
-        res = (res.equals("0:") ? "12:" : res);
-        String temp = ("0" + end.get(Calendar.MINUTE));
-        temp = temp.substring(temp.length() - 2);
-        res += temp;
-        temp = (end.get(Calendar.AM_PM) == 0 ? "am" : "pm");
-        res += " " + temp;
-        return res;
     }
 
     public String getStartString() {
@@ -93,15 +70,6 @@ public class ModeUsage implements Comparable<ModeUsage> {
         temp = (startTime.hours < 12 ? "am" : "pm");
         res += " " + temp;
         return res;
-    }
-
-    public void setEnd(Calendar end) {
-
-        this.end = end;
-
-        for (UsageTimeWatcher w : watchers)
-            w.onChange(this);
-
     }
 
     public ModeSettings getSettings() {
@@ -139,8 +107,6 @@ public class ModeUsage implements Comparable<ModeUsage> {
 
     public void copyFrom(ModeUsage other) {
         setSettings(other.settings);
-        setStart(other.start);
-        setEnd(other.end);
         setStartTime(other.startTime);
     }
 
