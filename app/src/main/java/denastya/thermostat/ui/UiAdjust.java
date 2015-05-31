@@ -1,6 +1,5 @@
 package denastya.thermostat.ui;
 
-import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -11,14 +10,11 @@ import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import denastya.thermostat.HostActivity;
 import denastya.thermostat.R;
 import denastya.thermostat.core.ModeSettings;
 import denastya.thermostat.core.ModeUsage;
 import denastya.thermostat.core.Model;
-import denastya.thermostat.core.Watchers.SettingsPeriodWatcher;
 import denastya.thermostat.ui.Watchers.OverridenWatcher;
-import denastya.thermostat.ui.Watchers.PeriodWatcher;
 import denastya.thermostat.ui.Watchers.TempWatcher;
 import denastya.thermostat.ui.Watchers.TimeWatcher;
 
@@ -74,7 +70,7 @@ public class UiAdjust {
         if (Model.isOverriden()) {
             // fix here !!
             ModeUsage mode = new ModeUsage();
-            mode.setSettings(Model.getSettings(ModeSettings.Period.TEMP_OVERRIDE));
+            mode.setSettings(Model.getSettings(ModeSettings.Period.OVERRIDE));
             Model.setCurrentUsage(mode);
 
             overrideBtn.setText("Cancel");

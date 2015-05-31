@@ -85,7 +85,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
     public void toggleOverride(View v) {
 
         if (!Model.isOverriden()) {
-            adjustMode(ModeSettings.Period.TEMP_OVERRIDE);
+            adjustMode(ModeSettings.Period.OVERRIDE);
         }
         else {
             Model.setOverriden(false);
@@ -134,7 +134,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
         Model.getAdjusting().setTemperature(temp);
 
-        if (Model.getAdjusting().getPeriod() == ModeSettings.Period.TEMP_OVERRIDE) {
+        if (Model.getAdjusting().getPeriod() == ModeSettings.Period.OVERRIDE) {
             Model.setOverriden(true);
         }
 
@@ -305,7 +305,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
         Model.timeEngine.setTicks(
                 c.get(Calendar.DAY_OF_WEEK) + 4,
-                c.get(Calendar.HOUR),
+                c.get(Calendar.HOUR_OF_DAY),
                 c.get(Calendar.MINUTE),
                 c.get(Calendar.SECOND)
         );

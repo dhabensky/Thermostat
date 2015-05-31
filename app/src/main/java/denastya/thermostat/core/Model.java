@@ -2,12 +2,9 @@ package denastya.thermostat.core;
 
 import android.app.Activity;
 
-import java.sql.Array;
 import java.util.ArrayList;
 
 import denastya.thermostat.core.Watchers.BooleanWatcher;
-import denastya.thermostat.ui.UiAdjust;
-import denastya.thermostat.ui.Watchers.OverridenWatcher;
 
 /**
  * Created by admin on 30.05.2015.
@@ -48,7 +45,7 @@ public class Model {
         settings = new ModeSettings[3];
         settings[0] = new ModeSettings(ModeSettings.Period.DAY);
         settings[1] = new ModeSettings(ModeSettings.Period.NIGHT);
-        settings[2] = new ModeSettings(ModeSettings.Period.TEMP_OVERRIDE);
+        settings[2] = new ModeSettings(ModeSettings.Period.OVERRIDE);
 
         settings[0].setTemperature(25.3f);
         settings[1].setTemperature(21.0f);
@@ -140,13 +137,6 @@ public class Model {
     }
 
     public static void setCurrentUsage(ModeUsage usage) {
-//        if ((usage.getSettings().isDay() || usage.getSettings().isNight()) && currentUsage.getSettings().isTemporaryOverriden()) {
-//            if (isSwitchBlocked()) {
-//                overridenUsage = usage;
-//                return;
-//            }
-//            setOverriden(false);
-//        }
         currentUsage.copyFrom(usage);
     }
 

@@ -66,12 +66,8 @@ public class ModeSettings {
         return this.period == Period.NIGHT;
     }
 
-    public boolean isTemporaryOverriden() {
-        return this.period == Period.TEMP_OVERRIDE;
-    }
-
-    public boolean isPermanentlyOverriden() {
-        return this.period == Period.PERM_OVERRIDE;
+    public boolean isOverriden() {
+        return this.period == Period.OVERRIDE;
     }
 
     public void attachWatcher(SettingsTempWatcher w) {
@@ -96,8 +92,7 @@ public class ModeSettings {
     public enum Period {
         DAY,
         NIGHT,
-        TEMP_OVERRIDE,
-        PERM_OVERRIDE,
+        OVERRIDE,
         ACTUAL_TEMP
     }
 

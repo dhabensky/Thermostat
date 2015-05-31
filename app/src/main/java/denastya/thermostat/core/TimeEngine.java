@@ -121,15 +121,6 @@ public final class TimeEngine {
         return new WeekTime((byte)timeStamp, hours, mins, secs);
     }
 
-    public Calendar getCalendar(WeekTime t) {
-        Calendar c = Calendar.getInstance();
-        c.set(Calendar.DAY_OF_WEEK, t.days + 1);
-        c.set(Calendar.HOUR, t.hours);
-        c.set(Calendar.MINUTE, t.mins);
-        c.set(Calendar.SECOND, t.secs);
-        return c;
-    }
-
     public WeekTime getWeekTime() {
         return getWeekTime(getTicks());
     }
