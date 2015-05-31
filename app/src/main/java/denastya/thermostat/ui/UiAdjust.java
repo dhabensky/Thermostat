@@ -176,7 +176,7 @@ public class UiAdjust {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                loadSchedule((ListView)Model.activity.getWindow().findViewById(R.id.listView), position);
+                loadSchedule((ListView)Model.activity.getWindow().findViewById(R.id.listView), (position + 1) % 7);
                 Log.d("RRR", "" + position);
             }
 
@@ -186,13 +186,10 @@ public class UiAdjust {
             }
         });
 
-        Model.content = new String[1];
-        Model.content[0] = "AXAXA";
-
         ListView listView = (ListView) view.findViewById(R.id.listView);
         ListAdapter listadapter = new ArrayAdapter<String>(
                 Model.activity,
-                android.R.layout.simple_list_item_1, Model.content);
+                android.R.layout.simple_list_item_1, new String[0]);
         listView.setAdapter(listadapter);
     }
 
@@ -228,8 +225,6 @@ public class UiAdjust {
             s += "    " + (usage.getSettings().isDay() ? "(day)" : "(night)");
             content[i++] = s;
         }
-
-        Model.content = content;
 
         ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
 

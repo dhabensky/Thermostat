@@ -63,7 +63,7 @@ public class ModeUsage implements Comparable<ModeUsage> {
         };
         String res = startTime.hours % 12 + ":";
         res = (res.equals("0:") ? "12:" : res);
-        res = days[startTime.days] + "  "  + res;
+        res = days[(startTime.days + 4) % 7] + "  "  + res;
         String temp = ("0" + startTime.mins);
         temp = temp.substring(temp.length() - 2);
         res += temp;

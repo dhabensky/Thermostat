@@ -274,12 +274,12 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
         Log.d("RRR", c.get(Calendar.DAY_OF_WEEK) + "");
 
         Model.timeEngine.setTicks(
-                c.get(Calendar.DAY_OF_WEEK) + 4,
+                c.get(Calendar.DAY_OF_WEEK),// + 4,     ////////////// <<<<<<<<<<<
                 c.get(Calendar.HOUR_OF_DAY),
                 c.get(Calendar.MINUTE),
                 c.get(Calendar.SECOND)
         );
-        Model.timeEngine.setTimeFactor(9000);
+        Model.timeEngine.setTimeFactor(3000);
         Model.timeEngine.start();
 
         final Handler handler = new Handler(getBaseContext().getMainLooper());
