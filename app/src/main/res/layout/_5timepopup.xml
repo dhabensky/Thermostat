@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:measureWithLargestChild="true"
+    android:gravity="center_horizontal"
+    android:background="@android:drawable/dialog_holo_light_frame"
+    android:paddingBottom="32dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Day mode"
+        android:id="@+id/modeName"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp" />
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="fill_vertical"
+        android:layout_gravity="center"
+        android:id="@+id/relativeLayout"
+        android:layout_below="@+id/modeName"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:id="@+id/linearLayout"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_vertical">
+
+            <NumberPicker
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/integralPicker"
+                android:measureWithLargestChild="true"
+                android:layout_gravity="center_vertical"
+                android:baselineAligned="true"
+                android:focusable="true"
+                android:descendantFocusability="blocksDescendants" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=":"
+                android:id="@+id/textView23"
+                android:textSize="80dp"
+                android:textColor="#ff517181"
+                android:layout_below="@+id/textView11"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="12dp"
+                android:enabled="false" />
+
+            <NumberPicker
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/fractionalPicker"
+                android:measureWithLargestChild="true"
+                android:importantForAccessibility="yes"
+                android:descendantFocusability="blocksDescendants" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="\u00b0"
+            android:id="@+id/textView24"
+            android:textSize="60dp"
+            android:textColor="#ff517181"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/linearLayout"
+            android:layout_toEndOf="@+id/linearLayout"
+            android:visibility="invisible" />
+    </RelativeLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Done"
+        android:id="@+id/button"
+        android:textSize="32dp"
+        android:textColor="#404040"
+        android:enabled="true"
+        android:focusable="true"
+        android:shadowColor="#202020"
+        android:layout_below="@+id/relativeLayout"
+        android:layout_alignRight="@+id/modeName"
+        android:layout_alignEnd="@+id/modeName"
+        android:layout_alignLeft="@+id/modeName"
+        android:layout_alignStart="@+id/modeName"
+        android:background="#ffe0e0e0"
+        android:clickable="true"
+        android:onClick="addTime" />
+
+</RelativeLayout>

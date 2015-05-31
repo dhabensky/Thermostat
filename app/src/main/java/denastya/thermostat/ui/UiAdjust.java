@@ -189,7 +189,7 @@ public class UiAdjust {
         ListView listView = (ListView) view.findViewById(R.id.listView);
         ListAdapter listadapter = new ArrayAdapter<String>(
                 Model.activity,
-                android.R.layout.simple_list_item_1, new String[0]);
+                R.layout.simple_list_item_1, new String[0]);
         listView.setAdapter(listadapter);
     }
 
@@ -205,6 +205,119 @@ public class UiAdjust {
         }
     }
 
+
+
+
+
+    public static void onTimePopupCreate(View view, ModeUsage prev) {
+
+        TextView t = (TextView)view.findViewById((R.id.modeName));
+        String modeName = prev.getSettings().isDay() ? "night" : "day";
+        t.setText("Start " + modeName + " at:");
+
+        int min = prev.getStart().hours;
+        int max = 23;
+
+        String[] nums = new String[max - min + 1];
+        for (int i = min; i <= max; i++) {
+            nums[i - min] = i + "";
+            Log.d("RRR", nums[i - min]);
+        }
+//        if (true) return;
+
+        class Shit {
+            public boolean skip;
+        }
+        final Shit shit = new Shit();
+
+        NumberPicker numpick = (NumberPicker)view.findViewById(R.id.integralPicker);
+        numpick.setMinValue(0);
+        numpick.setMaxValue(23);
+        numpick.setValue(prev.getStart().hours);
+
+        final NumberPicker intpick = numpick;
+
+        numpick = (NumberPicker)view.findViewById(R.id.fractionalPicker);
+        numpick.setMinValue(0);
+        numpick.setMaxValue(59);
+        numpick.setValue(prev.getStart().mins);
+        numpick.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+
+                int initial = intpick.getValue();
+
+                if (oldVal == 0 && newVal == 59) {
+                        intpick.setValue(initial - 1);
+                }
+                else if (oldVal == 59 && newVal == 0) {
+                        intpick.setValue(initial + 1);
+                }
+                else {
+                    shit.skip = false;
+                }
+            }
+        });
+    }
+
+
+
+
+
+    public static void updateSchedule() {
+        loadSchedule(
+                (ListView)Model.activity.getWindow().findViewById(R.id.listView),
+                (((Spinner) Model.activity.getWindow().findViewById(R.id.spinner)).getSelectedItemPosition() + 1) % 7
+        );
+
+        int count = ((ListView) Model.activity.getWindow().findViewById(R.id.listView)).getCount();
+
+        ((Button)Model.activity.getWindow().findViewById(R.id.button3)).setEnabled(count < 10);
+        ((Button)Model.activity.getWindow().findViewById(R.id.button2)).setEnabled(count > 1);
+
+    }
+
+    public static boolean removeLast() {
+
+        ListView lv = (ListView)Model.activity.getWindow().findViewById(R.id.listView);
+        ArrayAdapter<String> adapter = (ArrayAdapter<String>)lv.getAdapter();
+        String item = adapter.getItem(adapter.getCount() - 1);
+
+        //lv.smoothScrollToPositionFromTop(lv.getCount() - 1, 50, 400);
+        //getViewByPosition(adapter.getCount() - 1, lv).animate().setDuration(500).x(400).alpha(0f);
+        int day = (((Spinner) Model.activity.getWindow().findViewById(R.id.spinner)).getSelectedItemPosition() + 1) % 7;
+        //adapter.remove(adapter.getItem(adapter.getCount() - 1));
+        boolean res = Model.schedule.daySchedules[day].remove(Model.schedule.daySchedules[day].getUsages().last());
+        //adapter.notifyDataSetChanged();
+        // updateSchedule();
+        //lv.setSelection(lv.getCount() - 1);
+
+//        if (res) {
+//            adapter.remove(item);
+//            adapter.notifyDataSetChanged();
+//        }
+
+        return true;
+    }
+
+    public static void add() {
+        int day = (((Spinner) Model.activity.getWindow().findViewById(R.id.spinner)).getSelectedItemPosition() + 1) % 7;
+        ModeUsage usage = Model.schedule.daySchedules[day].getUsages().last();
+
+        Model.schedule.daySchedules[day].add(new ModeUsage());
+    }
+
+    public static void scrollDown() {
+
+
+        ListView lv = (ListView)Model.activity.getWindow().findViewById(R.id.listView);
+        ArrayAdapter<String> adapter = (ArrayAdapter<String>)lv.getAdapter();
+        String item = adapter.getItem(adapter.getCount() - 1);
+
+        //lv.smoothScrollToPositionFromTop(lv.getCount() - 1, 50, 400);
+        lv.setSelection(lv.getCount() - 1);
+    }
 
     public static void loadSchedule(ListView listView, int day) {
 

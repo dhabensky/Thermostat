@@ -28,7 +28,7 @@ public class DaySchedule {
             w.onChange(this);
     }
 
-    public void remove(ModeUsage usage) {
+    public boolean remove(ModeUsage usage) {
         if (usages.first() != usage && usages.size() > 1) {
 
             boolean found = false;
@@ -53,16 +53,17 @@ public class DaySchedule {
                 }
             }
 
-            if (!removed)
-               usages.remove(usage);
+            if (usages.last() == usage)
+                usages.remove(usage);
             for (DayScheduleWatcher w : watchers)
                 w.onChange(this);
 
         }
         else {
             Log.d("RRR", "unable to remoove");
+            return false;
         }
-
+        return true;
     }
 
     public TreeSet<ModeUsage> getUsages() {

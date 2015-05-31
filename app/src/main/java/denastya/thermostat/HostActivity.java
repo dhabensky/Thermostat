@@ -31,8 +31,10 @@ import android.widget.NumberPicker;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.SimpleAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -53,6 +55,7 @@ import denastya.thermostat.ui.UiAdjust;
 public class HostActivity extends ActionBarActivity implements ActionBar.TabListener {
 
     private PopupWindow popup;
+    private PopupWindow timePopup;
     private Thread thread = null;
     private final AtomicBoolean post = new AtomicBoolean();
 
@@ -82,11 +85,20 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
     };
 
 
-    public void toggleOverride(View v) {
+    public void onMinusPressed(View v) {
+        UiAdjust.removeLast();
+        UiAdjust.updateSchedule();
+        UiAdjust.scrollDown();
+    }
 
-        Model.schedule.removeNext();
-        if (true)
-            return;
+    public void onPlusPressed(View v) {
+        int day = (((Spinner) Model.activity.getWindow().findViewById(R.id.spinner)).getSelectedItemPosition() + 1) % 7;
+        ModeUsage usage = Model.schedule.daySchedules[day].getUsages().last();
+        adjustTime(usage);
+    }
+
+
+    public void toggleOverride(View v) {
 
         if (!Model.isOverriden()) {
             adjustMode(ModeSettings.Period.OVERRIDE);
@@ -182,6 +194,71 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
         popup.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
     }
 
+
+
+
+
+
+    public void adjustTime(ModeUsage usage) {
+
+
+        Point size = new Point();
+        getWindowManager().getDefaultDisplay().getSize(size);
+        LinearLayout ll = new LinearLayout(this);
+        LayoutInflater layoutInflater = (LayoutInflater)getBaseContext()
+                .getSystemService(LAYOUT_INFLATER_SERVICE);
+        View v = layoutInflater.inflate(R.layout._5timepopup, ll);
+        v.measure(
+                View.MeasureSpec.makeMeasureSpec((int)(size.x * 0.9), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec((int)(size.y * 0.7), View.MeasureSpec.AT_MOST)
+        );
+
+        timePopup = new PopupWindow(v.getMeasuredWidth(), v.getMeasuredHeight());
+        UiAdjust.onTimePopupCreate(v, usage);
+
+        timePopup.setContentView(v);
+        timePopup.setBackgroundDrawable(new BitmapDrawable());
+        timePopup.setOutsideTouchable(true);
+
+        //popup.setAnimationStyle(R.style.PopupWindowAnimation); // kills my smartphone :((
+        timePopup.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
+    }
+
+
+    public void addTime(View v) {
+
+        int day = (((Spinner) Model.activity.getWindow().findViewById(R.id.spinner)).getSelectedItemPosition() + 1) % 7;
+        ModeUsage usage = Model.schedule.daySchedules[day].getUsages().last();
+
+        ModeUsage newMode = new ModeUsage();
+        newMode.setSettings(
+                Model.getSettings(usage.getSettings().getPeriod() == ModeSettings.Period.DAY ?
+                        ModeSettings.Period.NIGHT : ModeSettings.Period.DAY));
+
+        int hours = ((NumberPicker) timePopup.getContentView().findViewById(R.id.integralPicker)).getValue();
+        int mins = ((NumberPicker) timePopup.getContentView().findViewById(R.id.fractionalPicker)).getValue();
+
+        TimeEngine.WeekTime t = new TimeEngine.WeekTime((byte)(usage.getStart().days), (byte)(hours), (byte)mins, (byte)0);
+        newMode.setStartTime(t);
+
+        if (newMode.compareTo(usage) > 0) {
+
+            Model.schedule.daySchedules[day].add(newMode);
+
+            timePopup.dismiss();
+            timePopup = null;
+            UiAdjust.updateSchedule();
+            UiAdjust.scrollDown();
+        }
+        else {
+            Toast.makeText(getApplicationContext(), "must be greater than " + usage.getStartString().substring(4), Toast.LENGTH_LONG).show();
+        }
+    }
+
+
+
+
+
     public int getStatusBarHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -233,6 +310,8 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
             @Override
             public void onPageSelected(int position) {
                 actionBar.setSelectedNavigationItem(position);
+                if (position == 2)
+                    UiAdjust.updateSchedule();
             }
 
 //            @Override
@@ -279,7 +358,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                 c.get(Calendar.MINUTE),
                 c.get(Calendar.SECOND)
         );
-        Model.timeEngine.setTimeFactor(3000);
+        Model.timeEngine.setTimeFactor(300);
         Model.timeEngine.start();
 
         final Handler handler = new Handler(getBaseContext().getMainLooper());
@@ -294,7 +373,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                     while (post.get()) {
                         handler.post(run);
                         try {
-                            Thread.sleep(200);
+                            Thread.sleep(1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }

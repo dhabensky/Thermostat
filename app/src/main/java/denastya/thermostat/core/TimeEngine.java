@@ -165,7 +165,7 @@ public final class TimeEngine {
         }
 
 
-        private WeekTime(byte days, byte hours, byte mins, byte secs) {
+        public WeekTime(byte days, byte hours, byte mins, byte secs) {
             this.days = days;
             this.hours = hours;
             this.mins = mins;

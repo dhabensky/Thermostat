@@ -71,36 +71,19 @@ public class Model {
 
         for (int i = 0; i < 7; i++) {
             ModeUsage u = new ModeUsage();
-            u.setSettings(getSettings(ModeSettings.Period.DAY));
+            u.setSettings(getSettings(ModeSettings.Period.NIGHT));
             u.setStartTime(timeEngine.getWeekTime(
                     TimeEngine.convert(i, 0, 0, 0)));
             schedule.daySchedules[i].add(u);
             u = new ModeUsage();
-            u.setSettings(getSettings(ModeSettings.Period.NIGHT));
-            u.setStartTime(timeEngine.getWeekTime(
-                    TimeEngine.convert(i, 4, 0, 0)));
-            schedule.daySchedules[i].add(u);
-            u = new ModeUsage();
             u.setSettings(getSettings(ModeSettings.Period.DAY));
             u.setStartTime(timeEngine.getWeekTime(
-                    TimeEngine.convert(i, 8, 0, 0)));
-            schedule.daySchedules[i].add(u);
-//            if (i > 3)
-//                continue;
-            u = new ModeUsage();
-            u.setSettings(getSettings(ModeSettings.Period.NIGHT));
-            u.setStartTime(timeEngine.getWeekTime(
-                    TimeEngine.convert(i, 11, 0, 0)));
-            schedule.daySchedules[i].add(u);
-            u = new ModeUsage();
-            u.setSettings(getSettings(ModeSettings.Period.DAY));
-            u.setStartTime(timeEngine.getWeekTime(
-                    TimeEngine.convert(i, 16, 0, 0)));
+                    TimeEngine.convert(i, 10, 0, 0)));
             schedule.daySchedules[i].add(u);
             u = new ModeUsage();
             u.setSettings(getSettings(ModeSettings.Period.NIGHT));
             u.setStartTime(timeEngine.getWeekTime(
-                    TimeEngine.convert(i, 20, 0, 0)));
+                    TimeEngine.convert(i, 22, 0, 0)));
             schedule.daySchedules[i].add(u);
         }
     }
