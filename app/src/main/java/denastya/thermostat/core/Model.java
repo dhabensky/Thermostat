@@ -33,6 +33,8 @@ public class Model {
 
     public static Schedule schedule;
 
+    public static String[] content;
+
 
     static  {
         init();
@@ -85,10 +87,12 @@ public class Model {
             u.setStartTime(timeEngine.getWeekTime(
                     TimeEngine.convert(i, 8, 0, 0)));
             schedule.daySchedules[i].add(u);
+            if (i > 3)
+                continue;
             u = new ModeUsage();
             u.setSettings(getSettings(ModeSettings.Period.NIGHT));
             u.setStartTime(timeEngine.getWeekTime(
-                    TimeEngine.convert(i, 12, 0, 0)));
+                    TimeEngine.convert(i, 11, 0, 0)));
             schedule.daySchedules[i].add(u);
             u = new ModeUsage();
             u.setSettings(getSettings(ModeSettings.Period.DAY));

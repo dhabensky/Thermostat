@@ -1,5 +1,7 @@
 package denastya.thermostat.ui;
 
+import android.graphics.Color;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -11,6 +13,8 @@ import android.widget.ListView;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
+
+import java.util.Objects;
 
 import denastya.thermostat.R;
 import denastya.thermostat.core.DaySchedule;
@@ -162,23 +166,52 @@ public class UiAdjust {
 
     public static void onScheduleScreenCreated(View view) {
 
+        Spinner spinner = (Spinner) view.findViewById(R.id.spinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                Model.activity, R.array.days_array, R.layout.spinner_layout);
 
-        class DropDownListener implements AdapterView.OnItemSelectedListener {
 
+        adapter.setDropDownViewResource(R.layout.spinner_layout);
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
+                loadSchedule((ListView)Model.activity.getWindow().findViewById(R.id.listView), position);
+                Log.d("RRR", "" + position);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
 
             }
+        });
+
+        Model.content = new String[1];
+        Model.content[0] = "AXAXA";
+
+        ListView listView = (ListView) view.findViewById(R.id.listView);
+        ListAdapter listadapter = new ArrayAdapter<String>(
+                Model.activity,
+                android.R.layout.simple_list_item_1, Model.content);
+        listView.setAdapter(listadapter);
+    }
+
+    public static View getViewByPosition(int pos, ListView listView) {
+        final int firstListItemPosition = listView.getFirstVisiblePosition();
+        final int lastListItemPosition = firstListItemPosition + listView.getChildCount() - 1;
+
+        if (pos < firstListItemPosition || pos > lastListItemPosition ) {
+            return listView.getAdapter().getView(pos, null, listView);
+        } else {
+            final int childIndex = pos - firstListItemPosition;
+            return listView.getChildAt(childIndex);
         }
+    }
 
 
+    public static void loadSchedule(ListView listView, int day) {
 
-        DaySchedule ds = Model.schedule.daySchedules[Model.timeEngine.getWeekTime().days % 7];
+        DaySchedule ds = Model.schedule.daySchedules[day];
 
         String[] content = new String[ds.getUsages().size()];
 
@@ -188,40 +221,29 @@ public class UiAdjust {
 
             int h = usage.getStart().hours;
             h %= 12;
-            if (h==0)
+            if (h == 0)
                 h = 12;
             if ((h + "").length() == 1)
                 s = "  " + s;
+            s += "    " + (usage.getSettings().isDay() ? "(day)" : "(night)");
             content[i++] = s;
         }
 
+        Model.content = content;
 
-        Spinner spinner = (Spinner)view.findViewById(R.id.spinner);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                Model.activity, R.array.days_array, R.layout.spinner_layout);
+        ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
 
-
-
-        adapter.setDropDownViewResource(R.layout.spinner_layout);
-        spinner.setAdapter(adapter);
-        //spinner.setOnItemSelectedListener(new DropDownListener());
-
-        //adapter.notifyDataSetChanged();
-
-
-
-        //////////////////
-
-
-        ListView lvDayOfWeek = (ListView)view.findViewById(R.id.listView);
-
-        final String[] daynames = content;//view.getResources().getStringArray(
-               // R.array.days_array); // массив строк мы определили в ресурсах ранее
-
+        //adapter.clear();
         ListAdapter listadapter = new ArrayAdapter<String>(
                 Model.activity,
-                android.R.layout.simple_list_item_1, daynames);
-        lvDayOfWeek.setAdapter(listadapter);
+                android.R.layout.simple_list_item_1, content);
+        listView.setAdapter(listadapter);
+
+//        for (String s : content)
+//            adapter.add(s);
+//
+//        ((ArrayAdapter<String>)listView.getAdapter()).notifyDataSetChanged();
+        //listView.getAdapter().
     }
 
     public static void onScreenCreate(int index, View view) {
