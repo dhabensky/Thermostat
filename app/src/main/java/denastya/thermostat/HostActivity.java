@@ -235,8 +235,10 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                 Model.getSettings(usage.getSettings().getPeriod() == ModeSettings.Period.DAY ?
                         ModeSettings.Period.NIGHT : ModeSettings.Period.DAY));
 
-        int hours = ((NumberPicker) timePopup.getContentView().findViewById(R.id.integralPicker)).getValue();
-        int mins = ((NumberPicker) timePopup.getContentView().findViewById(R.id.fractionalPicker)).getValue();
+        int hours = ((NumberPicker) timePopup.getContentView().findViewById(R.id.integralPicker)).getValue() - 1;
+        if (((NumberPicker) timePopup.getContentView().findViewById(R.id.numberPicker)).getValue() == 2)
+            hours += 12;
+        int mins = ((NumberPicker) timePopup.getContentView().findViewById(R.id.fractionalPicker)).getValue() - 1;
 
         TimeEngine.WeekTime t = new TimeEngine.WeekTime((byte)(usage.getStart().days), (byte)(hours), (byte)mins, (byte)0);
         newMode.setStartTime(t);

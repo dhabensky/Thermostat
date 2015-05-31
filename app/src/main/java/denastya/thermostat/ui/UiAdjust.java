@@ -218,12 +218,20 @@ public class UiAdjust {
         int min = prev.getStart().hours;
         int max = 23;
 
-        String[] nums = new String[max - min + 1];
-        for (int i = min; i <= max; i++) {
-            nums[i - min] = i + "";
-            Log.d("RRR", nums[i - min]);
+        String[] nums = new String[12];
+        for (int i = 0; i <= 11; i++) {
+            int val = i;
+            if (val == 0)
+                val = 12;
+            nums[i] = (val < 10 ? "0" + val : "" + val);
+            //Log.d("RRR", nums[i - min]);
         }
-//        if (true) return;
+
+        String[] mins = new String[60];
+        for (int i = 0; i < 60; i++) {
+            String s = "0" + i;
+            mins[i]  = s.substring(s.length() - 2);
+        }
 
         class Shit {
             public boolean skip;
@@ -231,16 +239,18 @@ public class UiAdjust {
         final Shit shit = new Shit();
 
         NumberPicker numpick = (NumberPicker)view.findViewById(R.id.integralPicker);
-        numpick.setMinValue(0);
-        numpick.setMaxValue(23);
-        numpick.setValue(prev.getStart().hours);
+        numpick.setMinValue(1);
+        numpick.setMaxValue(12);
+        numpick.setDisplayedValues(nums);
+        numpick.setValue(prev.getStart().hours % 12 + 1);
 
         final NumberPicker intpick = numpick;
 
         numpick = (NumberPicker)view.findViewById(R.id.fractionalPicker);
-        numpick.setMinValue(0);
-        numpick.setMaxValue(59);
-        numpick.setValue(prev.getStart().mins);
+        numpick.setMinValue(1);
+        numpick.setMaxValue(60);
+        numpick.setDisplayedValues(mins);
+        numpick.setValue(prev.getStart().mins + 1);
         numpick.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
 
             @Override
@@ -248,17 +258,26 @@ public class UiAdjust {
 
                 int initial = intpick.getValue();
 
-                if (oldVal == 0 && newVal == 59) {
-                        intpick.setValue(initial - 1);
+                Log.d("RRR", newVal + "");
+
+                if (oldVal == 1 && newVal == 60) {
+                    intpick.setValue(initial - 1);
                 }
-                else if (oldVal == 59 && newVal == 0) {
-                        intpick.setValue(initial + 1);
+                else if (oldVal == 60 && newVal == 1) {
+                    intpick.setValue(initial + 1);
                 }
                 else {
                     shit.skip = false;
                 }
             }
         });
+
+
+        final NumberPicker ampm = (NumberPicker)view.findViewById(R.id.numberPicker);
+        ampm.setMinValue(1);
+        ampm.setMaxValue(2);
+        ampm.setDisplayedValues(new String[] { "AM", "PM"});
+        ampm.setValue(prev.getStart().hours >= 12 ? 2 : 1);
     }
 
 
@@ -301,12 +320,6 @@ public class UiAdjust {
         return true;
     }
 
-    public static void add() {
-        int day = (((Spinner) Model.activity.getWindow().findViewById(R.id.spinner)).getSelectedItemPosition() + 1) % 7;
-        ModeUsage usage = Model.schedule.daySchedules[day].getUsages().last();
-
-        Model.schedule.daySchedules[day].add(new ModeUsage());
-    }
 
     public static void scrollDown() {
 

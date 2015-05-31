@@ -53,35 +53,49 @@
                 android:layout_height="wrap_content"
                 android:text=":"
                 android:id="@+id/textView23"
-                android:textSize="80dp"
+                android:textSize="40dp"
                 android:textColor="#ff517181"
                 android:layout_below="@+id/textView11"
                 android:layout_centerHorizontal="true"
                 android:layout_marginBottom="12dp"
-                android:enabled="false" />
+                android:enabled="false"
+                android:paddingTop="16dp" />
 
             <NumberPicker
-                android:layout_width="fill_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/fractionalPicker"
                 android:measureWithLargestChild="true"
                 android:importantForAccessibility="yes"
                 android:descendantFocusability="blocksDescendants" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  "
+                android:id="@+id/textView56"
+                android:textSize="40dp"
+                android:textColor="#ff517181"
+                android:enabled="false"
+                android:layout_centerVertical="true"
+                android:layout_alignRight="@+id/numberPicker"
+                android:layout_alignEnd="@+id/numberPicker" />
+
+            <NumberPicker
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/numberPicker"
+                android:measureWithLargestChild="true"
+                android:layout_gravity="center_vertical"
+                android:baselineAligned="true"
+                android:focusable="true"
+                android:descendantFocusability="blocksDescendants"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@+id/linearLayout"
+                android:layout_toEndOf="@+id/linearLayout" />
+
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="\u00b0"
-            android:id="@+id/textView24"
-            android:textSize="60dp"
-            android:textColor="#ff517181"
-            android:layout_centerVertical="true"
-            android:layout_toRightOf="@+id/linearLayout"
-            android:layout_toEndOf="@+id/linearLayout"
-            android:visibility="invisible" />
     </RelativeLayout>
 
     <Button
