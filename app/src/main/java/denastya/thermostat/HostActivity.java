@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -58,7 +59,15 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
             current.setStart(c);
             current.setStartTime(Model.timeEngine.getWeekTime());
             Model.schedule.switchMode(t.days, current);
-            Model.getNextUsage().setEnd(c);
+
+//            Model.getNextUsage().setEnd(c);
+
+            float power = 0.5f;
+            float dtime = 0.5f;
+            float delta = Model.getCurrentTemp().getTemperature() - Model.getCurrentUsage().getSettings().getTemperature();
+            float res = Math.min(power * dtime, Math.abs(delta));
+            Model.getCurrentTemp().setTemperature(Model.getCurrentTemp().getTemperature() - res * Math.signum(delta));
+
         }
     };
 
@@ -282,8 +291,10 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
         Calendar c = Calendar.getInstance();
 
+        Log.d("RRR", c.get(Calendar.DAY_OF_WEEK) + "");
+
         Model.timeEngine.setTicks(
-                c.get(Calendar.DAY_OF_WEEK) - 1,
+                c.get(Calendar.DAY_OF_WEEK) + 4,
                 c.get(Calendar.HOUR),
                 c.get(Calendar.MINUTE),
                 c.get(Calendar.SECOND)

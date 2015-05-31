@@ -55,6 +55,7 @@ public class Schedule {
 //    }
 
     private void setDay(int day) {
+        day %= 7;
         if (day != curDayInd) {
             switchNeeded = true;
             curDayInd = day;
@@ -84,18 +85,34 @@ public class Schedule {
 
         if (curTime.compareTo(nextMode) >= 0) {
             curMode = nextMode;
-            if (old != curMode)
+            if (old != curMode) {
                 Model.onNewModeComes(curMode);
+                Model.setNextUsage(findNextMode());
+            }
             return;
         }
 
-        if (switchNeeded)
+        if (switchNeeded) {
             Model.onNewModeComes(curMode);
+            Model.setNextUsage(nextMode);
+        }
+    }
+
+    private ModeUsage findNextMode() {
+
+        int day = curDayInd;
+        while (true) {
+            day = (day + 1) % 7;
+            Iterator<ModeUsage> it = daySchedules[day].getUsages().iterator();
+            if (it.hasNext())
+                return it.next();
+            if (day == curDayInd)
+                throw new NoSuchElementException("PIZDEC");
+        }
     }
 
     private void scheduleChanged(DaySchedule schedule, int index) {
 
-        //if (index)
         for (ScheduleWatcher w : watchers)
             w.onChange(this, index);
     }

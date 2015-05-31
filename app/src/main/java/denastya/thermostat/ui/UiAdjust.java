@@ -49,15 +49,10 @@ public class UiAdjust {
         TextView nextModeTemp = (TextView)view.findViewById((R.id.nextModeTemp));
 
         Model.getCurrentTemp().attachWatcher(new TempWatcher(curTemp));
+        Model.getCurrentUsage().attachWatcher(new TempWatcher(modeTemp));
         Model.getNextUsage().attachWatcher(new TimeWatcher(modeSwitch));
         Model.getNextUsage().attachWatcher(new TempWatcher(nextModeTemp));
 
-        Model.getCurrentUsage().attachWatcher(new TempWatcher(modeTemp) {
-            @Override
-            public void onChange(ModeSettings settings) {
-                super.onChange(settings);
-            }
-        });
 
         Model.attachOverridenWatcher(new OverridenWatcher((ViewGroup)view));
         adjustTemperatureScreenItems(view);

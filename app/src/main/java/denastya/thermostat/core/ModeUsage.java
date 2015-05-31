@@ -74,6 +74,27 @@ public class ModeUsage implements Comparable<ModeUsage> {
         return res;
     }
 
+    public String getStartString() {
+        String[] days = {
+                "Tue",
+                "Wed",
+                "Thu",
+                "Fri",
+                "Sat",
+                "Sun",
+                "Mon",
+        };
+        String res = startTime.hours % 12 + ":";
+        res = (res.equals("0:") ? "12:" : res);
+        res = days[startTime.days] + "  "  + res;
+        String temp = ("0" + startTime.mins);
+        temp = temp.substring(temp.length() - 2);
+        res += temp;
+        temp = (startTime.hours < 12 ? "am" : "pm");
+        res += " " + temp;
+        return res;
+    }
+
     public void setEnd(Calendar end) {
 
         this.end = end;

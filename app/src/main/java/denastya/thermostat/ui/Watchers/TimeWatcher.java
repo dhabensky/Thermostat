@@ -20,7 +20,7 @@ public class TimeWatcher implements UsageTimeWatcher {
 
     @Override
     public void onChange(ModeUsage usage) {
-        textView.setText(usage.getEndString());
+        textView.setText(usage.getStartString());
     }
 
 }
