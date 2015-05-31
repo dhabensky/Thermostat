@@ -49,9 +49,15 @@ public class UiAdjust {
         TextView nextModeTemp = (TextView)view.findViewById((R.id.nextModeTemp));
 
         Model.getCurrentTemp().attachWatcher(new TempWatcher(curTemp));
-        Model.getCurrentUsage().attachWatcher(new TempWatcher(modeTemp));
-        Model.getCurrentUsage().attachWatcher(new TimeWatcher(modeSwitch));
+        Model.getNextUsage().attachWatcher(new TimeWatcher(modeSwitch));
         Model.getNextUsage().attachWatcher(new TempWatcher(nextModeTemp));
+
+        Model.getCurrentUsage().attachWatcher(new TempWatcher(modeTemp) {
+            @Override
+            public void onChange(ModeSettings settings) {
+                super.onChange(settings);
+            }
+        });
 
         Model.attachOverridenWatcher(new OverridenWatcher((ViewGroup)view));
         adjustTemperatureScreenItems(view);
@@ -94,9 +100,9 @@ public class UiAdjust {
         }
         else {
             // fix here !!
-            ModeUsage mode = new ModeUsage();
-            mode.setSettings(Model.getSettings(ModeSettings.Period.DAY));
-            Model.setCurrentUsage(mode);
+            if (Model.overridenUsage != null) {
+                Model.setCurrentUsage(Model.overridenUsage);
+            }
 
             overrideBtn.setText("Override...");
             chb.setVisibility(View.INVISIBLE);

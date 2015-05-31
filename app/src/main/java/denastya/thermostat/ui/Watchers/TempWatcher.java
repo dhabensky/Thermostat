@@ -3,6 +3,7 @@ package denastya.thermostat.ui.Watchers;
 import android.widget.TextView;
 
 import denastya.thermostat.core.ModeSettings;
+import denastya.thermostat.core.Model;
 
 /**
  * Created by admin on 30.05.2015.

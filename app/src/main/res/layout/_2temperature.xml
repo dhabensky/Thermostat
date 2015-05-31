@@ -93,7 +93,8 @@
         android:layout_toLeftOf="@+id/textView21"
         android:layout_toStartOf="@+id/textView21"
         android:clickable="true"
-        android:onClick="swipeToSettingsCurrent" />
+        android:onClick="swipeToSettingsCurrent"
+        android:tag="overridable"/>
 
     <TextView
         android:layout_width="wrap_content"

@@ -3,6 +3,7 @@ package denastya.thermostat;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -25,14 +26,41 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import java.util.Calendar;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import denastya.thermostat.core.ModeSettings;
+import denastya.thermostat.core.ModeUsage;
 import denastya.thermostat.core.Model;
+import denastya.thermostat.core.TimeEngine;
 import denastya.thermostat.ui.UiAdjust;
 
 
 public class HostActivity extends ActionBarActivity implements ActionBar.TabListener {
 
     private PopupWindow popup;
+    private Thread thread = null;
+    private final AtomicBoolean post = new AtomicBoolean();
+
+    final Runnable run = new Runnable() {
+        @Override
+        public void run() {
+            TimeEngine.WeekTime t = Model.timeEngine.getWeekTime();
+            Calendar c = Calendar.getInstance();
+            c.set(Calendar.DAY_OF_WEEK, t.days + 1);
+            c.set(Calendar.HOUR, t.hours);
+            c.set(Calendar.MINUTE, t.mins);
+            c.set(Calendar.SECOND, t.secs);
+
+            ModeUsage current = new ModeUsage();
+            current.setStart(c);
+            current.setStartTime(Model.timeEngine.getWeekTime());
+            Model.schedule.switchMode(t.days, current);
+            Model.getNextUsage().setEnd(c);
+        }
+    };
 
 
     public void toggleOverride(View v) {
@@ -80,22 +108,19 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
         mViewPager.setCurrentItem(2);
     }
 
-
     public void saveSettings(View v) {
-        synchronized (this) {
 
-            float temp = ((NumberPicker) popup.getContentView().findViewById(R.id.integralPicker)).getValue() +
-                    ((NumberPicker) popup.getContentView().findViewById(R.id.fractionalPicker)).getValue() / 10.0f;
+        float temp = ((NumberPicker) popup.getContentView().findViewById(R.id.integralPicker)).getValue() +
+                ((NumberPicker) popup.getContentView().findViewById(R.id.fractionalPicker)).getValue() / 10.0f;
 
-            Model.getAdjusting().setTemperature(temp);
+        Model.getAdjusting().setTemperature(temp);
 
-            if (Model.getAdjusting().getPeriod() == ModeSettings.Period.TEMP_OVERRIDE) {
-                Model.setOverriden(true);
-            }
-
-            popup.dismiss();
-            popup = null;
+        if (Model.getAdjusting().getPeriod() == ModeSettings.Period.TEMP_OVERRIDE) {
+            Model.setOverriden(true);
         }
+
+        popup.dismiss();
+        popup = null;
     }
 
     public void adjustMode(View v) {
@@ -197,6 +222,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.host_activity);
 
+        Model.init();
         Model.activity = this;
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
@@ -252,7 +278,54 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                             .setTabListener(this));
         }
         mViewPager.setCurrentItem(1);
-        //UiAdjust.onScreenCreate(UiAdjust.TEMPERATURE, mViewPager.getChildAt(2));
+
+
+        Calendar c = Calendar.getInstance();
+
+        Model.timeEngine.setTicks(
+                c.get(Calendar.DAY_OF_WEEK) - 1,
+                c.get(Calendar.HOUR),
+                c.get(Calendar.MINUTE),
+                c.get(Calendar.SECOND)
+        );
+        Model.timeEngine.setTimeFactor(1500);
+        Model.timeEngine.start();
+
+        final Handler handler = new Handler(getBaseContext().getMainLooper());
+
+
+        post.set(true);
+
+        if (thread == null) {
+            thread = new Thread() {
+                @Override
+                public void run() {
+                    while (post.get()) {
+                        handler.post(run);
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            };
+            thread.start();
+        }
+
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        post.set(false);
+        thread = null;
     }
 
     @Override

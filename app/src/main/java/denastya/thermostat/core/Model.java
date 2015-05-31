@@ -19,6 +19,7 @@ public class Model {
     private static ModeSettings adjustingMode;
 
     private static ModeUsage currentUsage;
+    public static ModeUsage overridenUsage;
     private static ModeUsage nextUsage;
 
     private static ModeSettings editMode;
@@ -31,8 +32,18 @@ public class Model {
 
     public static Activity activity;
 
+    public static TimeEngine timeEngine;
+
+    public static Schedule schedule;
+
 
     static  {
+        init();
+    }
+
+    public static void init() {
+
+        schedule = new Schedule();
 
         settings = new ModeSettings[3];
         settings[0] = new ModeSettings(ModeSettings.Period.DAY);
@@ -58,6 +69,34 @@ public class Model {
 
         setOverriden(false);
         setSwitchBlocked(false);
+
+        timeEngine = new TimeEngine();
+
+        for (int i = 0; i < 7; i++) {
+            ModeUsage u = new ModeUsage();
+            u.setSettings(getSettings(ModeSettings.Period.DAY));
+            u.setStartTime(timeEngine.getWeekTime(
+                    TimeEngine.convert(i, 0, 0, 0)));
+            schedule.daySchedules[i].add(u);
+            u = new ModeUsage();
+            u.setSettings(getSettings(ModeSettings.Period.NIGHT));
+            u.setStartTime(timeEngine.getWeekTime(
+                    TimeEngine.convert(i, 10, 31, 0)));
+            schedule.daySchedules[i].add(u);
+        }
+    }
+
+
+    public static void onNewModeComes(ModeUsage usage) {
+        if (isOverriden() && isSwitchBlocked()) {
+            overridenUsage = usage;
+        }
+        else {
+            if (overriden) {
+                setOverriden(false);
+            }
+            setCurrentUsage(usage);
+        }
     }
 
     public static ModeSettings getSettings(ModeSettings.Period period) {
@@ -92,6 +131,13 @@ public class Model {
     }
 
     public static void setCurrentUsage(ModeUsage usage) {
+//        if ((usage.getSettings().isDay() || usage.getSettings().isNight()) && currentUsage.getSettings().isTemporaryOverriden()) {
+//            if (isSwitchBlocked()) {
+//                overridenUsage = usage;
+//                return;
+//            }
+//            setOverriden(false);
+//        }
         currentUsage.copyFrom(usage);
     }
 
@@ -113,6 +159,15 @@ public class Model {
 
     public static void setOverriden(boolean overriden) {
         Model.overriden = overriden;
+
+        if (overriden) {
+            if (overridenUsage == null)
+                overridenUsage = new ModeUsage();
+            overridenUsage.copyFrom(currentUsage);
+        }
+
+        if (!overriden && overridenUsage != null)
+            currentUsage.copyFrom(overridenUsage);
 
         for (BooleanWatcher w : watchers)
             w.onChange(overriden);

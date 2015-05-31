@@ -1,5 +1,7 @@
 package denastya.thermostat.core;
 
+import java.util.Calendar;
+
 /**
  * Allows to get gametime.
  * Also allows to set, pause and resume it, and change timefactor.
@@ -8,24 +10,20 @@ package denastya.thermostat.core;
  *
  * @author dhabensky <dhabensky@idp-crew.com>
  */
-public final class GameTime {
+public final class TimeEngine {
 
     private double timeFactor;
     private long startSysMillis;
     private long startGameTicks;
     private boolean paused;
 
-    private long dayDurationTicks;
-    private long initialDayTicks;
-
 
     /**
      * Constructs default gametime.
      */
-    public GameTime() {
+    public TimeEngine() {
         this.timeFactor = 300;
         this.paused = true;
-        this.dayDurationTicks = 24 * 60 * 60 * 1000;
     }
 
 
@@ -96,6 +94,46 @@ public final class GameTime {
         startGameTicks = curGameTime;
     }
 
+    public void setTicks(int days, int hours, int mins, int secs) {
+        long res = days * 24;
+        res = (res + hours) * 60;
+        res = (res + mins) * 60;
+        res = (res + secs) * 1000;
+        setTicks(res);
+    }
+
+    public static long convert(int days, int hours, int mins, int secs) {
+        long res = days * 24;
+        res = (res + hours) * 60;
+        res = (res + mins) * 60;
+        res = (res + secs) * 1000;
+        return res;
+    }
+
+    public WeekTime getWeekTime(long timeStamp)  {
+        timeStamp /= 1000;
+        byte secs = (byte)(timeStamp % 60);
+        timeStamp /= 60;
+        byte mins = (byte)(timeStamp % 60);
+        timeStamp /= 60;
+        byte hours = (byte)(timeStamp % 24);
+        timeStamp /= 24;
+        return new WeekTime((byte)timeStamp, hours, mins, secs);
+    }
+
+    public Calendar getCalendar(WeekTime t) {
+        Calendar c = Calendar.getInstance();
+        c.set(Calendar.DAY_OF_WEEK, t.days + 1);
+        c.set(Calendar.HOUR, t.hours);
+        c.set(Calendar.MINUTE, t.mins);
+        c.set(Calendar.SECOND, t.secs);
+        return c;
+    }
+
+    public WeekTime getWeekTime() {
+        return getWeekTime(getTicks());
+    }
+
     /**
      * Returns current gametime.
      *
@@ -109,71 +147,6 @@ public final class GameTime {
         return result;
     }
 
-
-
-    /**
-     * Returns time of gameday, value between 0 and getDayDurationTicks().
-     *
-     * @return time of gameday
-     */
-    public long getDayTimeTicks() {
-        return getDayTimeTicks(getTicks());
-    }
-
-    /**
-     * Returns time of gameday for given time stamp, value between 0 and getDayDurationTicks().
-     *
-     * @param timeStamp given time stamp
-     * @return time of gameday
-     */
-    public long getDayTimeTicks(long timeStamp) {
-        return (timeStamp + initialDayTicks) % dayDurationTicks;
-    }
-
-    /**
-     * Returns time of gameday, via struct of hours and minutes.
-     *
-     * @return time of gameday
-     */
-    public GameDayTime getDayTime() {
-        return getDayTime(getTicks());
-    }
-
-    /**
-     * Returns time of gameday for given time stamp, via struct of hours and minutes.
-     *
-     * @param timeStamp given time stamp
-     * @return time of gameday
-     */
-    public GameDayTime getDayTime(long timeStamp) {
-        final long dayTime = getDayTimeTicks(timeStamp);
-        final double hours = dayTime / (dayDurationTicks / 24.0);
-        final byte bHours = (byte)hours;
-        final byte mins = (byte)((hours - bHours) * 60);
-        return new GameDayTime(bHours, mins);
-    }
-
-    /**
-     * Returns time of gameday in hh:mm (or h:mm) format.
-     *
-     * @return time of gameday
-     */
-    public String getDayTimeString() {
-        return getDayTimeString(getTicks());
-    }
-
-    /**
-     * Returns time of gameday for given time stamp in hh:mm (or h:mm) format.
-     *
-     * @param timeStamp given time stamp
-     * @return time of gameday
-     */
-    public String getDayTimeString(long timeStamp) {
-        return getDayTime(timeStamp).toString();
-    }
-
-
-
     /**
      * Returns gametime passed since last call of {@code start()} or {@code setTicks()}.
      *
@@ -184,34 +157,33 @@ public final class GameTime {
     }
 
 
-    /**
-     * Class that holds hours and minutes of gameday.
-     */
-    public static final class GameDayTime {
 
+    public static final class WeekTime implements Comparable<WeekTime> {
+
+        public final byte days;
         public final byte hours;
         public final byte mins;
+        public final byte secs;
 
 
-        /**
-         * Constructs GameDayTime with zero values.
-         */
-        private GameDayTime() {
+        public WeekTime() {
+            this.days = 0;
             this.hours = 0;
             this.mins = 0;
+            this.secs = 0;
         }
 
-        /**
-         * Constructs GameDayTime with given values.
-         *
-         * @param hours hours of gameday
-         * @param mins minutes of gameday
-         */
-        private GameDayTime(byte hours, byte mins) {
+
+        private WeekTime(byte days, byte hours, byte mins, byte secs) {
+            this.days = days;
             this.hours = hours;
             this.mins = mins;
+            this.secs = secs;
         }
 
+        private long toTicks() {
+            return TimeEngine.convert(days, hours, mins, secs);
+        }
 
         @Override
         public String toString() {
@@ -219,6 +191,14 @@ public final class GameTime {
             return hours + ":" + mins.substring(mins.length() - 2);
         }
 
+        @Override
+        public int compareTo(WeekTime another) {
+            long l1 = toTicks();
+            long l2 = another.toTicks();
+            if (l1 == l2) return 0;
+            else return (l1 < l2 ? -1 : 1);
+            //return Long.compare(toTicks(), another.toTicks());
+        }
     }
 
 }
