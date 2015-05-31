@@ -55,6 +55,7 @@ public class Schedule {
         ModeUsage oldNext = nextMode;
 
         day %= 7;
+        curDayInd = day;
 
         ModeUsage cur = null;
         ModeUsage next = null;
@@ -66,6 +67,10 @@ public class Schedule {
             cur = usage;
         }
 
+//        if (cur.startTime.hours == 12) {
+//            Model.getCurrentUsage();
+//        }
+
         if (next == null) {
             int newDay = (day + 1) % 7;
             while (newDay != day) {
@@ -76,11 +81,15 @@ public class Schedule {
                 newDay = (newDay + 1) % 7;
             }
             if (newDay == day) {
+                Log.d("RRR", "PIZDEC");
                 throw new NoSuchElementException("AAAAAAAAA((((");
             }
         }
 
+
+
         if (cur != oldCur) {
+            //Log.d("RRR", cur.getStart().hours + "");
             Model.onNewModeComes(cur);
         }
 
@@ -94,6 +103,7 @@ public class Schedule {
 
     private void scheduleChanged(DaySchedule schedule, int index) {
 
+        Log.d("RRR", "sched " + index + " changed. how has " + schedule.getUsages().size() + " items");
         for (ScheduleWatcher w : watchers)
             w.onChange(this, index);
     }
@@ -105,6 +115,21 @@ public class Schedule {
     public void detachWatcher(ScheduleWatcher w) {
         this.watchers.remove(w);
     }
+
+    public void removeCurrent() {
+        if (curMode != null) {
+            daySchedules[curDayInd].remove(curMode);
+            curMode = null;
+        }
+    }
+
+    public void removeNext() {
+        if (nextMode != null) {
+            daySchedules[curDayInd].remove(nextMode);
+            nextMode = null;
+        }
+    }
+
 
 
 }

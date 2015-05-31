@@ -78,12 +78,27 @@ public class Model {
             u = new ModeUsage();
             u.setSettings(getSettings(ModeSettings.Period.NIGHT));
             u.setStartTime(timeEngine.getWeekTime(
+                    TimeEngine.convert(i, 4, 0, 0)));
+            schedule.daySchedules[i].add(u);
+            u = new ModeUsage();
+            u.setSettings(getSettings(ModeSettings.Period.DAY));
+            u.setStartTime(timeEngine.getWeekTime(
+                    TimeEngine.convert(i, 8, 0, 0)));
+            schedule.daySchedules[i].add(u);
+            u = new ModeUsage();
+            u.setSettings(getSettings(ModeSettings.Period.NIGHT));
+            u.setStartTime(timeEngine.getWeekTime(
                     TimeEngine.convert(i, 12, 0, 0)));
             schedule.daySchedules[i].add(u);
             u = new ModeUsage();
             u.setSettings(getSettings(ModeSettings.Period.DAY));
             u.setStartTime(timeEngine.getWeekTime(
-                    TimeEngine.convert(i, 14, 50, 0)));
+                    TimeEngine.convert(i, 16, 0, 0)));
+            schedule.daySchedules[i].add(u);
+            u = new ModeUsage();
+            u.setSettings(getSettings(ModeSettings.Period.NIGHT));
+            u.setStartTime(timeEngine.getWeekTime(
+                    TimeEngine.convert(i, 20, 0, 0)));
             schedule.daySchedules[i].add(u);
         }
     }

@@ -84,6 +84,10 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
     public void toggleOverride(View v) {
 
+        Model.schedule.removeNext();
+        if (true)
+            return;
+
         if (!Model.isOverriden()) {
             adjustMode(ModeSettings.Period.OVERRIDE);
         }
@@ -275,7 +279,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                 c.get(Calendar.MINUTE),
                 c.get(Calendar.SECOND)
         );
-        Model.timeEngine.setTimeFactor(4500);
+        Model.timeEngine.setTimeFactor(9000);
         Model.timeEngine.start();
 
         final Handler handler = new Handler(getBaseContext().getMainLooper());
@@ -420,7 +424,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                     rootView = inflater.inflate(R.layout._2temperature, container, false);
                     break;
                 case 3:
-                    rootView = inflater.inflate(R.layout._3schedule, container, false);
+                    rootView = inflater.inflate(R.layout._3schedule_new, container, false);
                     break;
             }
 

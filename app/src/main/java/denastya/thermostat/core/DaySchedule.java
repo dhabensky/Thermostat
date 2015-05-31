@@ -1,5 +1,7 @@
 package denastya.thermostat.core;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.SortedSet;
@@ -27,10 +29,40 @@ public class DaySchedule {
     }
 
     public void remove(ModeUsage usage) {
-        usages.remove(usage);
+        if (usages.first() != usage && usages.size() > 1) {
 
-        for (DayScheduleWatcher w : watchers)
-            w.onChange(this);
+            boolean found = false;
+            boolean removed = false;
+            for (ModeUsage existing : usages) {
+
+                if (found) {
+                    Log.d("RRR", "removing " + usage.getStart().hours + "");
+                    usages.remove(usage);
+                    Log.d("RRR", "removing " + existing.getStart().hours + "");
+                    usages.remove(existing);
+                    for (ModeUsage mod : usages) {
+                        Log.d("RRR", mod.getStart().hours + "");
+                    }
+                    Log.d("RRR", "=========");
+                    removed = true;
+                    break;
+                }
+
+                if (existing == usage) {
+                    found = true;
+                }
+            }
+
+            if (!removed)
+               usages.remove(usage);
+            for (DayScheduleWatcher w : watchers)
+                w.onChange(this);
+
+        }
+        else {
+            Log.d("RRR", "unable to remoove");
+        }
+
     }
 
     public TreeSet<ModeUsage> getUsages() {

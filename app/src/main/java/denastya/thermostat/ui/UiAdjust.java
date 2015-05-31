@@ -6,6 +6,8 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -195,6 +197,21 @@ public class UiAdjust {
         //spinner.setOnItemSelectedListener(new DropDownListener());
 
         //adapter.notifyDataSetChanged();
+
+
+
+        //////////////////
+
+
+        ListView lvDayOfWeek = (ListView)view.findViewById(R.id.listView);
+
+        final String[] daynames = view.getResources().getStringArray(
+                R.array.days_array); // массив строк мы определили в ресурсах ранее
+
+        ListAdapter listadapter = new ArrayAdapter<String>(
+                Model.activity,
+                android.R.layout.simple_list_item_1, daynames);
+        lvDayOfWeek.setAdapter(listadapter);
     }
 
     public static void onScreenCreate(int index, View view) {
