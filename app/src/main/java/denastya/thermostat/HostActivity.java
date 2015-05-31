@@ -1,7 +1,10 @@
 package denastya.thermostat;
 
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.ListActivity;
+import android.app.TimePickerDialog;
 import android.graphics.Point;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
@@ -12,7 +15,9 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -20,21 +25,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.NumberPicker;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
+import android.widget.RadioButton;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import denastya.thermostat.core.ModeSettings;
 import denastya.thermostat.core.ModeUsage;
 import denastya.thermostat.core.Model;
+import denastya.thermostat.core.RowSchedule;
 import denastya.thermostat.core.TimeEngine;
 import denastya.thermostat.ui.UiAdjust;
 
@@ -452,6 +463,129 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
             return rootView;
         }
+    }
+
+    public static class TimePickerFragment extends DialogFragment
+            implements TimePickerDialog.OnTimeSetListener {
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the current time as the default values for the picker
+            final Calendar c = Calendar.getInstance();
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+            int minute = c.get(Calendar.MINUTE);
+
+            // Create a new instance of TimePickerDialog and return it
+            return new TimePickerDialog(getActivity(), this, hour, minute,
+                    DateFormat.is24HourFormat(getActivity()));
+        }
+
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+            RowSchedule.DayPart dp = (hourOfDay < 12) ? RowSchedule.DayPart.AM : RowSchedule.DayPart.PM;
+            boolean day = ((RadioButton)getActivity().getWindow().findViewById(R.id.radioButtonDay)).isChecked();
+            RowSchedule rs = new RowSchedule(hourOfDay, minute, dp, (day ? ModeSettings.Period.DAY : ModeSettings.Period.NIGHT));
+            rowScheduleList.add(rs);
+            Collections.sort(rowScheduleList, RowSchedule.getComparator());
+        }
+    }
+
+    public static class ListViewLoader extends ListActivity {
+
+        private static final int CM_DELETE_ID = 1;
+
+        final String ATTRIBUTE_NAME_TEXT = "text";
+
+        ListView lvSimple;
+        SimpleAdapter sAdapter;
+        ArrayList<Map<String, Object>> data = new ArrayList<Map<String, Object>>(rowScheduleList.size());
+
+
+        /** Called when the activity is first created. */
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            Map<String, Object> m;
+            for (int i = 0; i < rowScheduleList.size(); i++) {
+                m = new HashMap<String, Object>();
+                m.put(ATTRIBUTE_NAME_TEXT, rowScheduleList.get(i));
+                data.add(m);
+            }
+            // ������ ���� ���������, �� ������� ����� �������� ������
+            String[] from = { ATTRIBUTE_NAME_TEXT};
+            // ������ ID View-�����������, � ������� ����� ��������� ������
+            int[] to = { R.id.tvText};
+
+            // ������� �������
+            sAdapter = new SimpleAdapter(this, data, android.R.layout.simple_list_item_1, from, to);
+
+            // ���������� ������ � ����������� ��� �������
+            lvSimple = (ListView) findViewById(R.id.listView);
+            lvSimple.setAdapter(sAdapter);
+            registerForContextMenu(lvSimple);
+        }
+
+        public void onButtonClick(View v) {
+            // ����������, ��� ������ ����������
+            sAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v,
+                                        ContextMenu.ContextMenuInfo menuInfo) {
+            super.onCreateContextMenu(menu, v, menuInfo);
+            menu.add(0, CM_DELETE_ID, 0, "Delete");
+        }
+
+        @Override
+        public boolean onContextItemSelected(MenuItem item) {
+            if (item.getItemId() == CM_DELETE_ID) {
+                // �������� ���� � ������ ������
+                AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+                // ������� Map �� ���������, ��������� ������� ������ � ������
+                rowScheduleList.remove(acmi.position);
+                // ����������, ��� ������ ����������
+                sAdapter.notifyDataSetChanged();
+                return true;
+            }
+            return super.onContextItemSelected(item);
+        }
+    }
+
+
+    public static ModeSettings.Period onRadioButtonClicked(View view) {
+        boolean checked = ((RadioButton)view).isChecked();
+        switch (view.getId()) {
+            case R.id.radioButtonDay:
+                if (checked) {
+                    return ModeSettings.Period.DAY;
+                }
+            case R.id.radioButtonNight:
+                if (checked) {
+                    return ModeSettings.Period.NIGHT;
+                }
+        }
+        return null;
+    }
+
+    public static List<RowSchedule> rowScheduleList = new ArrayList<>();
+
+
+    public void showTimePickerDialog(View v) {
+        DialogFragment newFragment = new TimePickerFragment();
+        newFragment.show(HostActivity.this.getFragmentManager(), "timePicker");
+    }
+
+    public void onRadioButtonNightClicked(View view) {
+        //addbutton.setvisible(true)
+        Button addbutton = (Button)findViewById(R.id.addbutton);
+        if (addbutton.getVisibility() != View.VISIBLE)
+            addbutton.setVisibility(View.VISIBLE);
+    }
+
+    public void onRadioButtonDayClicked(View view) {
+        //addbutton.setvisible(true)
+        Button addbutton = (Button)findViewById(R.id.addbutton);
+        if (addbutton.getVisibility() != View.VISIBLE)
+            addbutton.setVisibility(View.VISIBLE);
     }
 
 }

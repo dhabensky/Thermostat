@@ -7,6 +7,8 @@ import java.util.NoSuchElementException;
 
 import denastya.thermostat.core.Watchers.DayScheduleWatcher;
 import denastya.thermostat.core.Watchers.ScheduleWatcher;
+import denastya.thermostat.core.Watchers.SettingsTempWatcher;
+import denastya.thermostat.core.Watchers.UsageTimeWatcher;
 
 /**
  * Created by admin on 31.05.2015.
@@ -20,8 +22,6 @@ public class Schedule {
     private ModeUsage curMode;
     private ModeUsage nextMode;
     boolean switchNeeded = false;
-
-    //private ArrayList<DayScheduleWatcher> dayWatchers = new ArrayList<>();
 
     private ArrayList<ScheduleWatcher> watchers = new ArrayList<>();
 
@@ -49,10 +49,6 @@ public class Schedule {
 
     }
 
-
-//    public void init(int startDay, ModeUsage startTime) {
-//        curDayInd = startDay;
-//    }
 
     private void setDay(int day) {
         day %= 7;
@@ -117,6 +113,13 @@ public class Schedule {
             w.onChange(this, index);
     }
 
+    public void attachWatcher(ScheduleWatcher w) {
+        this.watchers.add(w);
+    }
+
+    public void detachWatcher(ScheduleWatcher w) {
+        this.watchers.remove(w);
+    }
 
 
 }
