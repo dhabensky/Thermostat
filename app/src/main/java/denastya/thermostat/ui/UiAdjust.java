@@ -13,6 +13,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import denastya.thermostat.R;
+import denastya.thermostat.core.DaySchedule;
 import denastya.thermostat.core.ModeSettings;
 import denastya.thermostat.core.ModeUsage;
 import denastya.thermostat.core.Model;
@@ -176,15 +177,24 @@ public class UiAdjust {
         }
 
 
-        String[] days = {
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-                "Sunday"
-        };
+
+        DaySchedule ds = Model.schedule.daySchedules[Model.timeEngine.getWeekTime().days % 7];
+
+        String[] content = new String[ds.getUsages().size()];
+
+        int i = 0;
+        for (ModeUsage usage : ds.getUsages()) {
+            String s = usage.getStartString().substring(4);
+
+            int h = usage.getStart().hours;
+            h %= 12;
+            if (h==0)
+                h = 12;
+            if ((h + "").length() == 1)
+                s = "  " + s;
+            content[i++] = s;
+        }
+
 
         Spinner spinner = (Spinner)view.findViewById(R.id.spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
@@ -205,8 +215,8 @@ public class UiAdjust {
 
         ListView lvDayOfWeek = (ListView)view.findViewById(R.id.listView);
 
-        final String[] daynames = view.getResources().getStringArray(
-                R.array.days_array); // массив строк мы определили в ресурсах ранее
+        final String[] daynames = content;//view.getResources().getStringArray(
+               // R.array.days_array); // массив строк мы определили в ресурсах ранее
 
         ListAdapter listadapter = new ArrayAdapter<String>(
                 Model.activity,
