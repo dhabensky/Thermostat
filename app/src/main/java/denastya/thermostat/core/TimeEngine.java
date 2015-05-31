@@ -173,7 +173,10 @@ public final class TimeEngine {
         }
 
         private long toTicks() {
-            return TimeEngine.convert(days, hours, mins, secs);
+            long res = hours * 60;
+            res = (res + mins) * 60;
+            res = (res + secs) * 1000;
+            return res;
         }
 
         @Override

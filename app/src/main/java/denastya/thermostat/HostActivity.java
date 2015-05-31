@@ -174,40 +174,6 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
         popup.setBackgroundDrawable(new BitmapDrawable());
         popup.setOutsideTouchable(true);
 
-//            if (Model.needReturn) {
-//                popup.setOnDismissListener(new PopupWindow.OnDismissListener() {
-//                    @Override
-//                    public void onDismiss() {
-//                        new Thread(new Runnable() {
-//
-//                            long start = System.currentTimeMillis();
-//
-//                            @Override
-//                            public void run() {
-//
-//                                while (System.currentTimeMillis() < start + 300) {
-//                                    try {
-//                                        Thread.sleep(50);
-//                                    } catch (InterruptedException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//
-//                                mViewPager.post(new Runnable() {
-//                                    @Override
-//                                    public void run() {
-//                                        if (mViewPager.getCurrentItem() == 0)
-//                                            mViewPager.setCurrentItem(1);
-//                                        popup = null;
-//                                        //Model.needReturn = false;
-//                                    }
-//                                });
-//                            }
-//                        }).start();
-//                    }
-//                });
-//            }
-
             //popup.setAnimationStyle(R.style.PopupWindowAnimation); // kills my smartphone :((
         popup.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
     }
@@ -309,7 +275,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                 c.get(Calendar.MINUTE),
                 c.get(Calendar.SECOND)
         );
-        Model.timeEngine.setTimeFactor(1500);
+        Model.timeEngine.setTimeFactor(4500);
         Model.timeEngine.start();
 
         final Handler handler = new Handler(getBaseContext().getMainLooper());
@@ -324,7 +290,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                     while (post.get()) {
                         handler.post(run);
                         try {
-                            Thread.sleep(500);
+                            Thread.sleep(200);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }

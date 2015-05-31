@@ -1,5 +1,7 @@
 package denastya.thermostat.core;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
@@ -18,10 +20,8 @@ public class Schedule {
     public DaySchedule[] daySchedules = new DaySchedule[7];
 
     private int curDayInd;
-    private Iterator<ModeUsage> iter;
     private ModeUsage curMode;
     private ModeUsage nextMode;
-    boolean switchNeeded = false;
 
     private ArrayList<ScheduleWatcher> watchers = new ArrayList<>();
 
@@ -29,7 +29,6 @@ public class Schedule {
     public Schedule() {
         curMode = null;
         nextMode = null;
-        iter = null;
         curDayInd = -1;
 
         for (int i = 0; i < 7; i++)
@@ -50,61 +49,47 @@ public class Schedule {
     }
 
 
-    private void setDay(int day) {
-        day %= 7;
-        if (day != curDayInd) {
-            switchNeeded = true;
-            curDayInd = day;
-            iter = daySchedules[curDayInd].getUsages().iterator();
-            if (iter.hasNext())
-                nextMode = iter.next();
-            else
-                nextMode = null;
-            curMode = null;
-        }
-    }
-
     public void switchMode(int day, ModeUsage curTime) {
 
-        switchNeeded = false;
-        ModeUsage old = curMode;
+        ModeUsage oldCur = curMode;
+        ModeUsage oldNext = nextMode;
 
-        setDay(day);
-        if (nextMode == null)
-            return;
+        day %= 7;
 
-        while (iter.hasNext() && curTime.compareTo(nextMode) >= 0) {
-            switchNeeded = true;
-            curMode = nextMode;
-            nextMode = iter.next();
-        }
-
-        if (curTime.compareTo(nextMode) >= 0) {
-            curMode = nextMode;
-            if (old != curMode) {
-                Model.onNewModeComes(curMode);
-                Model.setNextUsage(findNextMode());
+        ModeUsage cur = null;
+        ModeUsage next = null;
+        for (ModeUsage usage : daySchedules[day].getUsages()) {
+            if (curTime.compareTo(usage) < 0) {
+                next = usage;
+                break;
             }
-            return;
+            cur = usage;
         }
 
-        if (switchNeeded) {
-            Model.onNewModeComes(curMode);
-            Model.setNextUsage(nextMode);
+        if (next == null) {
+            int newDay = (day + 1) % 7;
+            while (newDay != day) {
+                if (!daySchedules[newDay].getUsages().isEmpty()) {
+                    next = daySchedules[newDay].getUsages().first();
+                    break;
+                }
+                newDay = (newDay + 1) % 7;
+            }
+            if (newDay == day) {
+                throw new NoSuchElementException("AAAAAAAAA((((");
+            }
         }
-    }
 
-    private ModeUsage findNextMode() {
-
-        int day = curDayInd;
-        while (true) {
-            day = (day + 1) % 7;
-            Iterator<ModeUsage> it = daySchedules[day].getUsages().iterator();
-            if (it.hasNext())
-                return it.next();
-            if (day == curDayInd)
-                throw new NoSuchElementException("PIZDEC");
+        if (cur != oldCur) {
+            Model.onNewModeComes(cur);
         }
+
+        if (next != oldNext) {
+            Model.setNextUsage(next);
+        }
+
+        curMode = cur;
+        nextMode = next;
     }
 
     private void scheduleChanged(DaySchedule schedule, int index) {
