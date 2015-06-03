@@ -2,6 +2,9 @@ package denastya.thermostat.core;
 
 import android.util.Log;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
@@ -15,16 +18,27 @@ import denastya.thermostat.core.Watchers.UsageTimeWatcher;
 /**
  * Created by admin on 31.05.2015.
  */
-public class Schedule {
+public class Schedule implements Serializable {
 
     public DaySchedule[] daySchedules = new DaySchedule[7];
 
+    transient
     private int curDayInd;
-    private ModeUsage curMode;
+
+    transient
+    public ModeUsage curMode;
+
+    transient
     private ModeUsage nextMode;
 
+    transient
     private ArrayList<ScheduleWatcher> watchers = new ArrayList<>();
 
+
+    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+        ois.defaultReadObject();
+        watchers = new ArrayList<>();
+    }
 
     public Schedule() {
         curMode = null;
@@ -66,12 +80,16 @@ public class Schedule {
             }
             cur = usage;
         }
+        Log.d("sched", "cur: day = " + cur.getStart().days + "; hour = " + cur.getStart().hours);
 
-//        if (cur.startTime.hours == 12) {
-//            Model.getCurrentUsage();
-//        }
+        if (cur == null) {
+            Log.d("sched", "cur == null, day = " + day);
+            cur = daySchedules[(day + 6) % 7].getUsages().last();
+            Log.d("sched", "cur != null, day = " + cur.getStart().days + "; hour = " + cur.getStart().hours);
+        }
 
         if (next == null) {
+            Log.d("sched", "next == null, day = " + day);
             int newDay = (day + 1) % 7;
             while (newDay != day) {
                 if (!daySchedules[newDay].getUsages().isEmpty()) {
@@ -84,16 +102,27 @@ public class Schedule {
                 Log.d("RRR", "PIZDEC");
                 throw new NoSuchElementException("AAAAAAAAA((((");
             }
+            Log.d("sched", "next != null, day = " + newDay + "; hour = " + next.getStart().hours);
         }
 
 
+//        Log.d("sched", cur.getStart().days + " " + cur.getStart().hours);
+//        Log.d("sched", next.getStart().days + " " + next.getStart().hours);
+
 
         if (cur != oldCur) {
+            Log.d("sched", "switch cur");
+            Log.d("sched", "cur:   , day = " + day + "; hour = " + cur.getStart().hours);
+            if (oldCur != null)
+                Log.d("sched", "oldCur:, day = " + day + "; hour = " + oldCur.getStart().hours);
+            else
+                Log.d("sched", "oldCur:, null");
             //Log.d("RRR", cur.getStart().hours + "");
             Model.onNewModeComes(cur);
         }
 
         if (next != oldNext) {
+            Log.d("sched", "switch next");
             Model.setNextUsage(next);
         }
 

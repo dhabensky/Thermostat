@@ -1,5 +1,6 @@
 package denastya.thermostat.core;
 
+import java.io.Serializable;
 import java.util.Calendar;
 
 /**
@@ -149,7 +150,7 @@ public final class TimeEngine {
 
 
 
-    public static final class WeekTime implements Comparable<WeekTime> {
+    public static final class WeekTime implements Comparable<WeekTime>, Serializable {
 
         public final byte days;
         public final byte hours;

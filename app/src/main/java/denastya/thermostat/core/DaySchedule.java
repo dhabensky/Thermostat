@@ -2,6 +2,9 @@ package denastya.thermostat.core;
 
 import android.util.Log;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.SortedSet;
@@ -14,12 +17,18 @@ import denastya.thermostat.core.Watchers.SettingsTempWatcher;
 /**
  * Created by admin on 31.05.2015.
  */
-public class DaySchedule {
+public class DaySchedule implements Serializable {
 
     private TreeSet<ModeUsage> usages = new TreeSet<>();
 
+    transient
     private ArrayList<DayScheduleWatcher> watchers = new ArrayList<>();
 
+
+    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+        ois.defaultReadObject();
+        watchers = new ArrayList<>();
+    }
 
     public void add(ModeUsage usage) {
         usages.add(usage);

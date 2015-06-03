@@ -5,75 +5,101 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="denastya.thermostat.HostActivity$PlaceholderFragment" >
+    tools:context="denastya.thermostat.HostActivity$PlaceholderFragment"
+    android:orientation="vertical"
+    android:id="@+id/shit">
 
     <ListView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="400px"
+        android:layout_weight="0"
         android:id="@+id/listView"
+        android:layout_gravity="center_horizontal"
+        android:drawSelectorOnTop="true"
+        android:footerDividersEnabled="true"
+        android:headerDividersEnabled="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_alignRight="@+id/addbutton"
-        android:layout_alignEnd="@+id/addbutton"
-        android:layout_above="@+id/addbutton"
-        android:layout_below="@+id/spinner" />
+        android:layout_below="@+id/relativeLayout2"
+        android:layout_above="@+id/button3" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/relativeLayout2"
+        android:background="@color/button_material_light">
+
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/spinner"
+            android:background="@android:drawable/btn_dropdown"
+            android:entries="@array/days_array"
+            android:spinnerMode="dropdown"
+            android:layout_toLeftOf="@+id/imageButton"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="4dp" />
+
+        <ImageButton
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:id="@+id/imageButton"
+            android:clickable="true"
+            android:cropToPadding="false"
+            android:layout_gravity="right"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="false"
+            android:layout_alignBottom="@+id/spinner"
+            android:adjustViewBounds="true"
+            android:src="@drawable/abc_ic_menu_moreoverflow_mtrl_alpha"
+            android:paddingBottom="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:layout_marginLeft="20dp"
+            android:tint="#404040"
+            android:onClick="onOverflowPressed" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignTop="@+id/button3"
+        android:background="@color/button_material_light"></RelativeLayout>
 
     <Button
-        android:layout_width="wrap_content"
+        android:id="@+id/button3"
+        android:layout_width="145dp"
         android:layout_height="wrap_content"
-        android:text="Add\n time"
-        android:id="@+id/addbutton"
-        android:onClick="showTimePickerDialog"
+        android:layout_gravity="center_horizontal|center"
+        android:textSize="32dp"
+        android:text="+"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:visibility="invisible" />
+        android:onClick="onPlusPressed"
+        android:textColor="@color/butt" />
 
-    <RadioButton
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="145dp"
         android:layout_height="wrap_content"
-        android:text="Day"
-        android:id="@+id/radioButtonDay"
+        android:layout_gravity="center_horizontal|center"
+        android:textSize="32dp"
+        android:text="-"
+        android:onClick="onMinusPressed"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:onClick="onRadioButtonDayClicked" />
+        android:textColor="@color/butt" />
 
-    <RadioButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Night"
-        android:id="@+id/radioButtonNight"
-        android:layout_alignBottom="@+id/radioButtonDay"
-        android:layout_toRightOf="@+id/radioButtonDay"
-        android:layout_toLeftOf="@+id/addbutton"
-        android:layout_toStartOf="@+id/addbutton"
-        android:onClick="onRadioButtonNightClicked" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Adding item"
-        android:id="@+id/textView8"
-        android:layout_above="@+id/radioButtonDay"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <Spinner
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/spinner"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="New Text"
-        android:id="@+id/tvText"
-        android:layout_alignTop="@+id/listView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
 
 </RelativeLayout>

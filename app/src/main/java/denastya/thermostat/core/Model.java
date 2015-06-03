@@ -4,6 +4,7 @@ import android.app.Activity;
 
 import java.util.ArrayList;
 
+import denastya.thermostat.HostActivity;
 import denastya.thermostat.core.Watchers.BooleanWatcher;
 
 /**
@@ -20,23 +21,18 @@ public class Model {
     private static ModeUsage nextUsage;
 
     private static ModeSettings editMode;
-//    public static boolean needReturn;
 
     private static boolean overriden;
     private static boolean switchBlocked;
 
     private static ArrayList<BooleanWatcher> watchers;
 
-    public static Activity activity;
+    public static HostActivity activity;
 
     public static TimeEngine timeEngine;
 
     public static Schedule schedule;
 
-
-    static  {
-        init();
-    }
 
     public static void init() {
 
@@ -60,7 +56,6 @@ public class Model {
         nextUsage.setSettings(settings[1]);
 
         setEditMode(null);
-//        needReturn = false;
 
         watchers = new ArrayList<>();
 
@@ -78,7 +73,7 @@ public class Model {
             u = new ModeUsage();
             u.setSettings(getSettings(ModeSettings.Period.DAY));
             u.setStartTime(timeEngine.getWeekTime(
-                    TimeEngine.convert(i, 10, 0, 0)));
+                    TimeEngine.convert(i, 12, 0, 0)));
             schedule.daySchedules[i].add(u);
             u = new ModeUsage();
             u.setSettings(getSettings(ModeSettings.Period.NIGHT));
@@ -157,16 +152,26 @@ public class Model {
     }
 
     public static void setOverriden(boolean overriden) {
+
+        boolean wasOverriden = Model.isOverriden();
         Model.overriden = overriden;
+
+        if (wasOverriden && !overriden) {
+            currentUsage.copyFrom(overridenUsage);
+            overridenUsage = null;
+        }
 
         if (overriden) {
             if (overridenUsage == null)
                 overridenUsage = new ModeUsage();
             overridenUsage.copyFrom(currentUsage);
         }
+//        else
+//            overridenUsage = null;
 
         if (!overriden && overridenUsage != null)
-            currentUsage.copyFrom(overridenUsage);
+            currentUsage.copyFrom(Model.schedule.curMode);
+//            currentUsage.copyFrom(overridenUsage);
 
         for (BooleanWatcher w : watchers)
             w.onChange(overriden);

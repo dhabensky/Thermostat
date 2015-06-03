@@ -1,25 +1,26 @@
 package denastya.thermostat.ui.Watchers;
 
-import android.view.ViewGroup;
+import android.widget.Button;
 
 import denastya.thermostat.core.Watchers.BooleanWatcher;
-import denastya.thermostat.ui.UiAdjust;
+import denastya.thermostat.ui.Fragments.TemperatureFragment;
 
 /**
- * Created by admin on 30.05.2015.
+ * Created by admin on 03.06.2015.
  */
 public class OverridenWatcher implements BooleanWatcher {
 
-    private ViewGroup view;
+    private TemperatureFragment screen;
 
 
-    public OverridenWatcher(ViewGroup view) {
-        this.view = view;
+    public OverridenWatcher(TemperatureFragment screen) {
+        this.screen = screen;
     }
 
 
-    public void onChange(boolean overriden) {
-        UiAdjust.adjustTemperatureScreenItems(view);
+    @Override
+    public void onChange(boolean value) {
+        screen.update();
     }
 
 }

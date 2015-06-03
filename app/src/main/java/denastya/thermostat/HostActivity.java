@@ -1,61 +1,57 @@
 package denastya.thermostat;
 
-import android.app.Dialog;
-import android.app.DialogFragment;
-import android.app.ListActivity;
-import android.app.TimePickerDialog;
 import android.graphics.Point;
-import android.graphics.drawable.BitmapDrawable;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.text.format.DateFormat;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.NumberPicker;
-import android.widget.PopupWindow;
-import android.widget.RadioButton;
-import android.widget.SimpleAdapter;
 import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OptionalDataException;
+import java.io.OutputStream;
+import java.io.StreamCorruptedException;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import denastya.thermostat.core.DaySchedule;
+import denastya.thermostat.core.Schedule;
+import denastya.thermostat.ui.Fragments.BaseFragment;
+import denastya.thermostat.ui.Fragments.ScheduleFragment;
+import denastya.thermostat.ui.Fragments.SettingsFragment;
+import denastya.thermostat.ui.Fragments.TemperatureFragment;
 import denastya.thermostat.core.ModeSettings;
 import denastya.thermostat.core.ModeUsage;
 import denastya.thermostat.core.Model;
-import denastya.thermostat.core.RowSchedule;
 import denastya.thermostat.core.TimeEngine;
-import denastya.thermostat.ui.UiAdjust;
+import denastya.thermostat.ui.Popups.SaveLoadPopup;
+import denastya.thermostat.ui.Popups.TemperaturePickerPopup;
+import denastya.thermostat.ui.Popups.TimePickerPopup;
 
 
 public class HostActivity extends ActionBarActivity implements ActionBar.TabListener {
 
-    private PopupWindow popup;
-    private PopupWindow timePopup;
+    private TemperaturePickerPopup popup;
+    private TimePickerPopup timePopup;
+    private SaveLoadPopup saveLoadPopup;
     private Thread thread = null;
     private final AtomicBoolean post = new AtomicBoolean();
 
@@ -63,87 +59,81 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
         @Override
         public void run() {
             TimeEngine.WeekTime t = Model.timeEngine.getWeekTime();
-            Calendar c = Calendar.getInstance();
-            c.set(Calendar.DAY_OF_WEEK, t.days + 1);
-            c.set(Calendar.HOUR, t.hours);
-            c.set(Calendar.MINUTE, t.mins);
-            c.set(Calendar.SECOND, t.secs);
 
             ModeUsage current = new ModeUsage();
             current.setStartTime(Model.timeEngine.getWeekTime());
             Model.schedule.switchMode(t.days, current);
-
-//            Model.getNextUsage().setEnd(c);
 
             float power = 0.5f;
             float dtime = 0.5f;
             float delta = Model.getCurrentTemp().getTemperature() - Model.getCurrentUsage().getSettings().getTemperature();
             float res = Math.min(power * dtime, Math.abs(delta));
             Model.getCurrentTemp().setTemperature(Model.getCurrentTemp().getTemperature() - res * Math.signum(delta));
-
         }
     };
 
 
+    public void onOverflowPressed(View v) {
+        showSaveLoadPopup();
+    }
+
     public void onMinusPressed(View v) {
-        UiAdjust.removeLast();
-        UiAdjust.updateSchedule();
-        UiAdjust.scrollDown();
+        ScheduleFragment scheduleFragment = mSectionsPagerAdapter.getScheduleFragment();
+        scheduleFragment.removeLast();
+        scheduleFragment.update();
+        scheduleFragment.scrollDown();
     }
 
     public void onPlusPressed(View v) {
-        int day = (((Spinner) Model.activity.getWindow().findViewById(R.id.spinner)).getSelectedItemPosition() + 1) % 7;
+        int day = mSectionsPagerAdapter.getScheduleFragment().getSelectedDay();
         ModeUsage usage = Model.schedule.daySchedules[day].getUsages().last();
-        adjustTime(usage);
+        showTimePopup(usage);
     }
 
 
     public void toggleOverride(View v) {
 
         if (!Model.isOverriden()) {
-            adjustMode(ModeSettings.Period.OVERRIDE);
+            showTemperaturePopup(ModeSettings.Period.OVERRIDE);
         }
         else {
             Model.setOverriden(false);
-            ViewGroup root = (ViewGroup)getWindow().getDecorView().findViewById(android.R.id.content);
-            UiAdjust.adjustTemperatureScreenItems(root);
+            mSectionsPagerAdapter.getTemperatureFragment().update();
         }
     }
 
     public void toggleBlock(View v) {
         Model.setSwitchBlocked(!Model.isSwitchBlocked());
-
-        if (Model.isSwitchBlocked()) {
-            ViewGroup root = (ViewGroup)getWindow().getDecorView().findViewById(android.R.id.content);
-            ((TextView)root.findViewById(R.id.nextSwitchLabel)).setVisibility(View.INVISIBLE);
-            ((TextView)root.findViewById(R.id.nextModeTemp)).setVisibility(View.INVISIBLE);
-            ((TextView)root.findViewById(R.id.modeSwitchTime)).setVisibility(View.INVISIBLE);
-            ((TextView)root.findViewById(R.id.textView22)).setVisibility(View.INVISIBLE);
-        }
-        else {
-            ViewGroup root = (ViewGroup)getWindow().getDecorView().findViewById(android.R.id.content);
-            ((TextView)root.findViewById(R.id.nextSwitchLabel)).setVisibility(View.VISIBLE);
-            ((TextView)root.findViewById(R.id.nextModeTemp)).setVisibility(View.VISIBLE);
-            ((TextView)root.findViewById(R.id.modeSwitchTime)).setVisibility(View.VISIBLE);
-            ((TextView)root.findViewById(R.id.textView22)).setVisibility(View.VISIBLE);
-        }
+        mSectionsPagerAdapter.getTemperatureFragment().update();
     }
+
 
     public void swipeToSettingsCurrent(View v) {
         Model.setEditMode(Model.getCurrentUsage().getSettings());
-        adjustMode(Model.getEditMode().getPeriod());
+        showTemperaturePopup(Model.getEditMode().getPeriod());
     }
 
     public void swipeToSettingsNext(View v) {
         Model.setEditMode(Model.getNextUsage().getSettings());
-        adjustMode(Model.getEditMode().getPeriod());
+        showTemperaturePopup(Model.getEditMode().getPeriod());
     }
 
     public void swipeToSchedule(View v) {
         mViewPager.setCurrentItem(2);
     }
 
-    public void saveSettings(View v) {
+
+    public void onAdjustModeRequest(View v) {
+
+        if (v.getTag().equals("dayTemp")) {
+            showTemperaturePopup(ModeSettings.Period.DAY);
+        }
+        else if (v.getTag().equals("nightTemp")) {
+            showTemperaturePopup(ModeSettings.Period.NIGHT);
+        }
+    }
+
+    public void onAdjustModeConfirm(View v) {
 
         float temp = ((NumberPicker) popup.getContentView().findViewById(R.id.integralPicker)).getValue() +
                 ((NumberPicker) popup.getContentView().findViewById(R.id.fractionalPicker)).getValue() / 10.0f;
@@ -152,80 +142,64 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
         if (Model.getAdjusting().getPeriod() == ModeSettings.Period.OVERRIDE) {
             Model.setOverriden(true);
+            mSectionsPagerAdapter.getTemperatureFragment().update();
         }
 
         popup.dismiss();
         popup = null;
     }
 
-    public void adjustMode(View v) {
 
-        if (v.getTag().equals("dayTemp")) {
-            adjustMode(ModeSettings.Period.DAY);
-        }
-        else if (v.getTag().equals("nightTemp")) {
-            adjustMode(ModeSettings.Period.NIGHT);
-        }
-    }
-
-    public void adjustMode(ModeSettings.Period period) {
+    public void showTemperaturePopup(ModeSettings.Period period) {
 
         Model.setAdjusting(period);
 
-        Point size = new Point();
-        getWindowManager().getDefaultDisplay().getSize(size);
-        LinearLayout ll = new LinearLayout(this);
-        LayoutInflater layoutInflater = (LayoutInflater)getBaseContext()
-                .getSystemService(LAYOUT_INFLATER_SERVICE);
-        View v = layoutInflater.inflate(R.layout._4popup, ll);
+        View v = inflateLayout(R.layout._4popup);
+        Point size = getWindowSize();
+
         v.measure(
                 View.MeasureSpec.makeMeasureSpec((int)(size.x * 0.9), View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec((int)(size.y * 0.7), View.MeasureSpec.AT_MOST)
         );
 
-        popup = new PopupWindow(v.getMeasuredWidth(), v.getMeasuredHeight());
-        UiAdjust.onPopupCreate(v);
-
-        popup.setContentView(v);
-        popup.setBackgroundDrawable(new BitmapDrawable());
-        popup.setOutsideTouchable(true);
-
-            //popup.setAnimationStyle(R.style.PopupWindowAnimation); // kills my smartphone :((
+        popup = new TemperaturePickerPopup(v.getMeasuredWidth(), v.getMeasuredHeight(), v);
+        popup.onCreate();
         popup.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
     }
 
+    public void showTimePopup(ModeUsage usage) {
 
+        View v = inflateLayout(R.layout._5timepopup);
+        Point size = getWindowSize();
 
-
-
-
-    public void adjustTime(ModeUsage usage) {
-
-
-        Point size = new Point();
-        getWindowManager().getDefaultDisplay().getSize(size);
-        LinearLayout ll = new LinearLayout(this);
-        LayoutInflater layoutInflater = (LayoutInflater)getBaseContext()
-                .getSystemService(LAYOUT_INFLATER_SERVICE);
-        View v = layoutInflater.inflate(R.layout._5timepopup, ll);
         v.measure(
                 View.MeasureSpec.makeMeasureSpec((int)(size.x * 0.9), View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec((int)(size.y * 0.7), View.MeasureSpec.AT_MOST)
         );
 
-        timePopup = new PopupWindow(v.getMeasuredWidth(), v.getMeasuredHeight());
-        UiAdjust.onTimePopupCreate(v, usage);
-
-        timePopup.setContentView(v);
-        timePopup.setBackgroundDrawable(new BitmapDrawable());
-        timePopup.setOutsideTouchable(true);
-
-        //popup.setAnimationStyle(R.style.PopupWindowAnimation); // kills my smartphone :((
+        timePopup = new TimePickerPopup(v.getMeasuredWidth(), v.getMeasuredHeight(), v, usage);
+        timePopup.onCreate();
         timePopup.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
     }
 
+    public void showSaveLoadPopup() {
 
-    public void addTime(View v) {
+        View v = inflateLayout(R.layout._6saveload);
+        Point size = getWindowSize();
+
+        v.measure(
+                View.MeasureSpec.makeMeasureSpec((int)(size.x * 0.9), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec((int)(size.y * 0.7), View.MeasureSpec.AT_MOST)
+        );
+
+        saveLoadPopup = new SaveLoadPopup(v.getMeasuredWidth(), v.getMeasuredHeight(), v);
+        saveLoadPopup.onCreate();
+        saveLoadPopup.showAsDropDown(findViewById(R.id.imageButton));
+        //saveLoadPopup.showAtLocation(new LinearLayout(this), Gravity.CENTER, 0, getStatusBarHeight());
+    }
+
+
+    public void onAddNewModeUsage(View v) {
 
         int day = (((Spinner) Model.activity.getWindow().findViewById(R.id.spinner)).getSelectedItemPosition() + 1) % 7;
         ModeUsage usage = Model.schedule.daySchedules[day].getUsages().last();
@@ -249,8 +223,8 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
 
             timePopup.dismiss();
             timePopup = null;
-            UiAdjust.updateSchedule();
-            UiAdjust.scrollDown();
+            mSectionsPagerAdapter.getScheduleFragment().update();
+            mSectionsPagerAdapter.getScheduleFragment().scrollDown();
         }
         else {
             Toast.makeText(getApplicationContext(), "must be greater than " + usage.getStartString().substring(4), Toast.LENGTH_LONG).show();
@@ -258,8 +232,19 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
     }
 
 
+    public View inflateLayout(int layoutId) {
 
+        LinearLayout ll = new LinearLayout(this);
+        LayoutInflater layoutInflater = (LayoutInflater)getBaseContext()
+                .getSystemService(LAYOUT_INFLATER_SERVICE);
+        return layoutInflater.inflate(layoutId, ll);
+    }
 
+    public Point getWindowSize() {
+        Point size = new Point();
+        getWindowManager().getDefaultDisplay().getSize(size);
+        return size;
+    }
 
     public int getStatusBarHeight() {
         int result = 0;
@@ -270,6 +255,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
         return result;
     }
 
+
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -278,7 +264,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
      * may be best to switch to a
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
-    SectionsPagerAdapter mSectionsPagerAdapter;
+    public SectionsPagerAdapter mSectionsPagerAdapter;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -305,37 +291,6 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
-        // When swiping between different sections, select the corresponding
-        // tab. We can also use ActionBar.Tab#select() to do this if we have
-        // a reference to the Tab.
-        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                actionBar.setSelectedNavigationItem(position);
-                if (position == 2)
-                    UiAdjust.updateSchedule();
-            }
-
-//            @Override
-//            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-//                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-//                if (position == 0 && positionOffsetPixels == 0 && Model.getEditMode() != null) {
-//                    adjustMode(Model.getEditMode().getPeriod());
-//                    Model.setEditMode(null);
-//                    Model.needReturn = true;
-//                }
-//                else {
-//                    synchronized (this) {
-//                        Model.needReturn = false;
-//                        if (popup != null) {
-//                            popup.dismiss();
-//                            popup = null;
-//                        }
-//                    }
-//                }
-//            }
-        });
-
         // For each of the sections in the app, add a tab to the action bar.
         for (int i = 0; i < mSectionsPagerAdapter.getCount(); i++) {
             // Create a tab with text corresponding to the page title defined by
@@ -347,15 +302,30 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
         }
+
+        // When swiping between different sections, select the corresponding
+        // tab. We can also use ActionBar.Tab#select() to do this if we have
+        // a reference to the Tab.
+        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                actionBar.setSelectedNavigationItem(position);
+                try {
+                    mSectionsPagerAdapter.getItem(position).update();
+                }
+                catch (Exception ex) {
+                    Log.d("RRR", ex.toString());
+                }
+            }
+        });
+
         mViewPager.setCurrentItem(1);
 
 
         Calendar c = Calendar.getInstance();
 
-        Log.d("RRR", c.get(Calendar.DAY_OF_WEEK) + "");
-
         Model.timeEngine.setTicks(
-                c.get(Calendar.DAY_OF_WEEK),// + 4,     ////////////// <<<<<<<<<<<
+                c.get(Calendar.DAY_OF_WEEK),
                 c.get(Calendar.HOUR_OF_DAY),
                 c.get(Calendar.MINUTE),
                 c.get(Calendar.SECOND)
@@ -375,7 +345,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
                     while (post.get()) {
                         handler.post(run);
                         try {
-                            Thread.sleep(1000);
+                            Thread.sleep(500);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -385,12 +355,6 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
             thread.start();
         }
 
-
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
     }
 
     @Override
@@ -401,19 +365,7 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-        // When the given tab is selected, switch to the corresponding page in
-        // the ViewPager.
         mViewPager.setCurrentItem(tab.getPosition());
     }
 
@@ -434,20 +386,48 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
+        SettingsFragment settingsFragment;
+        TemperatureFragment temperatureFragment;
+        ScheduleFragment scheduleFragment;
+
+
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
+        public SettingsFragment getSettingsFragment() {
+            if (settingsFragment == null)
+                settingsFragment = new SettingsFragment();
+            return settingsFragment;
+        }
+
+        public TemperatureFragment getTemperatureFragment() {
+            if (temperatureFragment == null)
+                temperatureFragment = new TemperatureFragment();
+            return temperatureFragment;
+        }
+
+        public ScheduleFragment getScheduleFragment() {
+            if (scheduleFragment == null)
+                scheduleFragment = new ScheduleFragment();
+            return scheduleFragment;
+        }
+
         @Override
-        public Fragment getItem(int position) {
-            // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+        public BaseFragment getItem(int position) {
+            switch (position) {
+                case 0:
+                    return getSettingsFragment();
+                case 1:
+                    return getTemperatureFragment();
+                case 2:
+                    return getScheduleFragment();
+            }
+            return null;
         }
 
         @Override
         public int getCount() {
-            // Show 3 total pages.
             return 3;
         }
 
@@ -463,179 +443,6 @@ public class HostActivity extends ActionBarActivity implements ActionBar.TabList
             }
             return null;
         }
-    }
-
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        public PlaceholderFragment() {
-
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = null;
-
-            int num = (int)(getArguments().get(ARG_SECTION_NUMBER));
-            switch (num) {
-                case 1:
-                    rootView = inflater.inflate(R.layout._1settings, container, false);
-                    break;
-                case 2:
-                    rootView = inflater.inflate(R.layout._2temperature, container, false);
-                    break;
-                case 3:
-                    rootView = inflater.inflate(R.layout._3schedule_new, container, false);
-                    break;
-            }
-
-            UiAdjust.onScreenCreate(num, rootView);
-
-            return rootView;
-        }
-    }
-
-    public static class TimePickerFragment extends DialogFragment
-            implements TimePickerDialog.OnTimeSetListener {
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the current time as the default values for the picker
-            final Calendar c = Calendar.getInstance();
-            int hour = c.get(Calendar.HOUR_OF_DAY);
-            int minute = c.get(Calendar.MINUTE);
-
-            // Create a new instance of TimePickerDialog and return it
-            return new TimePickerDialog(getActivity(), this, hour, minute,
-                    DateFormat.is24HourFormat(getActivity()));
-        }
-
-        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-            RowSchedule.DayPart dp = (hourOfDay < 12) ? RowSchedule.DayPart.AM : RowSchedule.DayPart.PM;
-            boolean day = ((RadioButton)getActivity().getWindow().findViewById(R.id.radioButtonDay)).isChecked();
-            RowSchedule rs = new RowSchedule(hourOfDay, minute, dp, (day ? ModeSettings.Period.DAY : ModeSettings.Period.NIGHT));
-            rowScheduleList.add(rs);
-            Collections.sort(rowScheduleList, RowSchedule.getComparator());
-        }
-    }
-
-    public static class ListViewLoader extends ListActivity {
-
-        private static final int CM_DELETE_ID = 1;
-
-        final String ATTRIBUTE_NAME_TEXT = "text";
-
-        ListView lvSimple;
-        SimpleAdapter sAdapter;
-        ArrayList<Map<String, Object>> data = new ArrayList<Map<String, Object>>(rowScheduleList.size());
-
-
-        /** Called when the activity is first created. */
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            Map<String, Object> m;
-            for (int i = 0; i < rowScheduleList.size(); i++) {
-                m = new HashMap<String, Object>();
-                m.put(ATTRIBUTE_NAME_TEXT, rowScheduleList.get(i));
-                data.add(m);
-            }
-            // ������ ���� ���������, �� ������� ����� �������� ������
-            String[] from = { ATTRIBUTE_NAME_TEXT};
-            // ������ ID View-�����������, � ������� ����� ��������� ������
-            int[] to = { R.id.tvText};
-
-            // ������� �������
-            sAdapter = new SimpleAdapter(this, data, android.R.layout.simple_list_item_1, from, to);
-
-            // ���������� ������ � ����������� ��� �������
-            lvSimple = (ListView) findViewById(R.id.listView);
-            lvSimple.setAdapter(sAdapter);
-            registerForContextMenu(lvSimple);
-        }
-
-        public void onButtonClick(View v) {
-            // ����������, ��� ������ ����������
-            sAdapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View v,
-                                        ContextMenu.ContextMenuInfo menuInfo) {
-            super.onCreateContextMenu(menu, v, menuInfo);
-            menu.add(0, CM_DELETE_ID, 0, "Delete");
-        }
-
-        @Override
-        public boolean onContextItemSelected(MenuItem item) {
-            if (item.getItemId() == CM_DELETE_ID) {
-                // �������� ���� � ������ ������
-                AdapterView.AdapterContextMenuInfo acmi = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-                // ������� Map �� ���������, ��������� ������� ������ � ������
-                rowScheduleList.remove(acmi.position);
-                // ����������, ��� ������ ����������
-                sAdapter.notifyDataSetChanged();
-                return true;
-            }
-            return super.onContextItemSelected(item);
-        }
-    }
-
-
-    public static ModeSettings.Period onRadioButtonClicked(View view) {
-        boolean checked = ((RadioButton)view).isChecked();
-        switch (view.getId()) {
-            case R.id.radioButtonDay:
-                if (checked) {
-                    return ModeSettings.Period.DAY;
-                }
-            case R.id.radioButtonNight:
-                if (checked) {
-                    return ModeSettings.Period.NIGHT;
-                }
-        }
-        return null;
-    }
-
-    public static List<RowSchedule> rowScheduleList = new ArrayList<>();
-
-
-    public void showTimePickerDialog(View v) {
-        DialogFragment newFragment = new TimePickerFragment();
-        newFragment.show(HostActivity.this.getFragmentManager(), "timePicker");
-    }
-
-    public void onRadioButtonNightClicked(View view) {
-        //addbutton.setvisible(true)
-        Button addbutton = (Button)findViewById(R.id.addbutton);
-        if (addbutton.getVisibility() != View.VISIBLE)
-            addbutton.setVisibility(View.VISIBLE);
-    }
-
-    public void onRadioButtonDayClicked(View view) {
-        //addbutton.setvisible(true)
-        Button addbutton = (Button)findViewById(R.id.addbutton);
-        if (addbutton.getVisibility() != View.VISIBLE)
-            addbutton.setVisibility(View.VISIBLE);
     }
 
 }

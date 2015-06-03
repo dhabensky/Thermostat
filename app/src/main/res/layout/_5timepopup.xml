@@ -5,7 +5,8 @@
     android:measureWithLargestChild="true"
     android:gravity="center_horizontal"
     android:background="@android:drawable/dialog_holo_light_frame"
-    android:paddingBottom="32dp">
+    android:paddingBottom="32dp"
+    android:id="@+id/shsss">
 
     <TextView
         android:layout_width="wrap_content"
@@ -115,6 +116,6 @@
         android:layout_alignStart="@+id/modeName"
         android:background="#ffe0e0e0"
         android:clickable="true"
-        android:onClick="addTime" />
+        android:onClick="onAddNewModeUsage" />
 
 </RelativeLayout>

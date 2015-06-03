@@ -10,3 +10,4 @@ public interface SettingsTempWatcher {
     void onChange(ModeSettings settings);
 
 }
+

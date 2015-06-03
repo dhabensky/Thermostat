@@ -1,5 +1,9 @@
 package denastya.thermostat.core;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import denastya.thermostat.core.Watchers.SettingsPeriodWatcher;
@@ -8,12 +12,14 @@ import denastya.thermostat.core.Watchers.SettingsTempWatcher;
 /**
  * Created by admin on 21.05.2015.
  */
-public class ModeSettings {
+public class ModeSettings implements Serializable {
 
     private float  temperature;
     private Period period;
 
+    transient
     private ArrayList<SettingsTempWatcher> tempWatchers;
+    transient
     private ArrayList<SettingsPeriodWatcher> periodWatchers;
 
 
@@ -23,6 +29,16 @@ public class ModeSettings {
         this.periodWatchers = new ArrayList<SettingsPeriodWatcher>();
     }
 
+
+    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException{
+        try {
+            ois.defaultReadObject();
+            periodWatchers = new ArrayList<>();
+            tempWatchers = new ArrayList<>();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void setTemperature(float temperature) {
         this.temperature = temperature;

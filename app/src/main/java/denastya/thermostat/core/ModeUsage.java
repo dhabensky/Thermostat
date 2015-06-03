@@ -1,24 +1,34 @@
 package denastya.thermostat.core;
 
+import android.media.audiofx.BassBoost;
+
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 
 import denastya.thermostat.core.Watchers.SettingsPeriodWatcher;
 import denastya.thermostat.core.Watchers.SettingsTempWatcher;
 import denastya.thermostat.core.Watchers.UsageTimeWatcher;
+import denastya.thermostat.ui.Watchers.TempWatcher;
 import denastya.thermostat.ui.Watchers.TimeWatcher;
 
 /**
  * Created by admin on 21.05.2015.
  */
-public class ModeUsage implements Comparable<ModeUsage> {
+public class ModeUsage implements Comparable<ModeUsage>, Serializable {
 
     public TimeEngine.WeekTime startTime;
     private ModeSettings settings;
 
+    transient
     private SettingsTempWatcher settingsTempWatcher;
 
+    transient
     private ArrayList<UsageTimeWatcher> watchers;
+    transient
     private ArrayList<SettingsTempWatcher> tempWatchers;
 
 
@@ -39,6 +49,28 @@ public class ModeUsage implements Comparable<ModeUsage> {
         };
     }
 
+
+    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException{
+        try {
+            ois.defaultReadObject();
+            this.watchers = new ArrayList<>();
+            this.tempWatchers = new ArrayList<>();
+
+            this.settingsTempWatcher = new SettingsTempWatcher() {
+
+                @Override
+                public void onChange(ModeSettings settings) {
+
+                    for (SettingsTempWatcher w : tempWatchers)
+                        w.onChange(settings);
+                }
+
+            };
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public TimeEngine.WeekTime getStart() {
         return startTime;
@@ -62,7 +94,7 @@ public class ModeUsage implements Comparable<ModeUsage> {
                 "Mon",
         };
         String res = startTime.hours % 12 + ":";
-        res = (res.equals("0:") ? "12:" : res);
+        //res = (res.equals("0:") ? "12:" : res);
         res = days[(startTime.days + 4) % 7] + "  "  + res;
         String temp = ("0" + startTime.mins);
         temp = temp.substring(temp.length() - 2);
@@ -93,6 +125,11 @@ public class ModeUsage implements Comparable<ModeUsage> {
     }
 
     public void attachWatcher(SettingsTempWatcher w) {
+        for (SettingsTempWatcher stw : tempWatchers) {
+            if (stw.equals(w)) {
+                return;
+            }
+        }
         this.tempWatchers.add(w);
         w.onChange(this.settings);
     }

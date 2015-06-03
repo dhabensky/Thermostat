@@ -16,4 +16,9 @@
         <item>Saturday</item>
     </string-array>
 
+    <string-array name="saveload">
+        <item>Save (week)</item>
+        <item>Load (week)</item>
+    </string-array>
+
 </resources>
